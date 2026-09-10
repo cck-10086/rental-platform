@@ -1,0 +1,50 @@
+# Node
+node_modules/
+dist/
+
+# Java / Maven
+target/
+*.class
+
+# 环境变量与本地敏感配置
+.env
+.env.*
+application-local.yml
+token.txt
+
+# 编辑器与系统文件
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
+logs/
+
+# 归档的临时脚本与测试数据
+_archive/
+
+# 本地上传缓存
+.uploads/
+
+# 交付包（release-* 目录不入库，按需重新生成）
+release-*/
+
+# Playwright 浏览器会话与截图临时文件
+.playwright-cli/
+
+# 个人隐私文件（不入库）
+简历/
+tmp/
+tmp-*/
+
+# 毕设个人学术文档（含姓名/学号等个人信息，不入库）
+2026.7.13-任务书/
+2026.8.6-开题报告/
+2026.8.10-论文/
+
+# 个人答辩材料（不入库）
+docs/答辩讲稿.md
+docs/演示检查单.md
