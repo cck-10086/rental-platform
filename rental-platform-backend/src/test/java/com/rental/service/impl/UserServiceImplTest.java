@@ -60,7 +60,7 @@ class UserServiceImplTest {
         dto.setPassword("123456");
         RuntimeException e = assertThrows(RuntimeException.class, () -> userService.register(dto));
         assertEquals("用户名已存在", e.getMessage());
-        verify(userMapper, never()).insert(any());
+        verify(userMapper, never()).insert(any(User.class));
     }
 
     @Test

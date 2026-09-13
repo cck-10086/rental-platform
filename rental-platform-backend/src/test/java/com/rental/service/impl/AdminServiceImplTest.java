@@ -61,7 +61,7 @@ class AdminServiceImplTest {
         try {
             RuntimeException e = assertThrows(RuntimeException.class, () -> adminService.updateUserRole(1L, "user"));
             assertEquals("不能修改自己的角色", e.getMessage());
-            verify(userMapper, never()).updateById(any());
+            verify(userMapper, never()).updateById(any(User.class));
         } finally {
             SecurityContextHolder.clearContext();
         }
@@ -76,7 +76,7 @@ class AdminServiceImplTest {
 
             adminService.resetPassword(2L, "newpass");
 
-            verify(userMapper).updateById(argThat(u -> "encoded-new".equals(u.getPassword())));
+            verify(userMapper).updateById(argThat((User u) -> "encoded-new".equals(u.getPassword())));
         } finally {
             SecurityContextHolder.clearContext();
         }
