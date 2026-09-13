@@ -5,8 +5,8 @@ server {
     listen 80;
     server_name localhost;          # 改为你的域名或服务器 IP
 
-    # 前端构建产物目录（npm run build 生成的 dist）
-    root E:/study/毕业设计/rental-platform-frontend/dist;
+    # 前端构建产物目录（npm run build 生成的 dist，按实际部署路径修改）
+    root /usr/share/nginx/rental-platform/dist;
     index index.html;
 
     # Vue Router history 模式：刷新不 404
