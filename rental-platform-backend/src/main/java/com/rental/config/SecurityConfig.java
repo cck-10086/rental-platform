@@ -62,8 +62,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // 仅允许本地开发前端访问，生产环境需按实际域名收紧
-        config.setAllowedOriginPatterns(Arrays.asList("http://localhost:5173", "http://127.0.0.1:5173"));
+        // 允许本地开发（5173）与 preview 部署（4173）前端访问，生产环境需按实际域名收紧
+        config.setAllowedOriginPatterns(Arrays.asList(
+                "http://localhost:5173", "http://127.0.0.1:5173",
+                "http://localhost:4173", "http://127.0.0.1:4173"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(Arrays.asList("*"));
         config.setAllowCredentials(true);
