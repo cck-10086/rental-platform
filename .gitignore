@@ -15,12 +15,14 @@ token.txt
 # 编辑器与系统文件
 .idea/
 .vscode/
+.workbuddy/
 *.iml
 .DS_Store
 Thumbs.db
 
 # 日志
 *.log
+*.log.err
 logs/
 
 # 归档的临时脚本与测试数据
