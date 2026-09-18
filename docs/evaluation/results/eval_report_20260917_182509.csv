@@ -1,0 +1,3 @@
+﻿contract_id,contract_file,标注条款数,预测条款数,TP,FP,FN,定级正确,耗时秒
+C17,contract_17.txt,2,15,2,13,0,0,45.17
+C18,contract_18.txt,3,9,3,6,0,3,39.82

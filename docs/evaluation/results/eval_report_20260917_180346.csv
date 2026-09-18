@@ -1,0 +1,2 @@
+﻿contract_id,contract_file,标注条款数,预测条款数,TP,FP,FN,定级正确,耗时秒
+C01,contract_01.txt,0,13,0,13,0,0,37.17

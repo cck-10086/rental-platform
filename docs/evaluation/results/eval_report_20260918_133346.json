@@ -1,0 +1,264 @@
+{
+  "evaluated_at": "20260918_133346",
+  "base_url": "http://localhost:8088",
+  "match_threshold": 0.55,
+  "tp": 15,
+  "fp": 26,
+  "fn": 1,
+  "precision": 0.3659,
+  "recall": 0.9375,
+  "f1": 0.5263,
+  "level_hit": 9,
+  "level_accuracy": 0.6,
+  "avg_elapsed_sec": 14.5,
+  "per_contract": [
+    {
+      "contract_id": "C11",
+      "contract_file": "contract_11.txt",
+      "elapsed_sec": 11.36,
+      "annotated": 2,
+      "predicted": 5,
+      "tp": 1,
+      "fp": 4,
+      "fn": 1,
+      "level_hit": 1,
+      "missed": [
+        {
+          "clause_type": "其他",
+          "true_risk_level": "medium",
+          "clause_text": "租赁期内乙方使用房屋产生的水费、电费、燃气费、网络费由乙方承担并按时缴纳。本合同履行期间的物业管理费由乙方承担，按物业公司的收费标准每季度缴纳一次。"
+        }
+      ],
+      "false_positive": [
+        {
+          "clause": "乙方逾期支付租金的，每逾期一日按月租金的0.5%支付违约金；逾期超过15日的，甲方有权解除合同并收回房屋。任何一方违反本合同约定给对方造成损失的，应承担赔偿责任。",
+          "risk_level": "high",
+          "risk_type": "违约金畸高、违约责任不对等"
+        },
+        {
+          "clause": "租赁期满，乙方结清各项费用、返还房屋并经甲方验收无损坏的，押金全额无息退还。",
+          "risk_level": "medium",
+          "risk_type": "押金退还条件苛刻、退还期限缺失"
+        },
+        {
+          "clause": "房屋设施因自然损耗发生故障的，由甲方负责维修；因乙方使用不当损坏的，由乙方负责修复或赔偿。甲方应在收到报修通知后5日内安排维修。",
+          "risk_level": "medium",
+          "risk_type": "维修责任保障不足、缺少违约救济"
+        },
+        {
+          "clause": "甲方（签章）：严某某 2026年9月　日；乙方（签章）：岑某某 2026年9月　日",
+          "risk_level": "low",
+          "risk_type": "提示：签署日期空白"
+        }
+      ]
+    },
+    {
+      "contract_id": "C12",
+      "contract_file": "contract_12.txt",
+      "elapsed_sec": 14.82,
+      "annotated": 2,
+      "predicted": 5,
+      "tp": 2,
+      "fp": 3,
+      "fn": 0,
+      "level_hit": 1,
+      "missed": [],
+      "false_positive": [
+        {
+          "clause": "乙方逾期支付租金的，每逾期一日按月租金的0.5%支付违约金；逾期超过15日的，甲方有权解除合同并收回房屋。任何一方违约给对方造成损失的，应承担赔偿责任。",
+          "risk_level": "high",
+          "risk_type": "违约金畸高、解除权行使条件失衡、未约定出租方违约责任"
+        },
+        {
+          "clause": "经甲乙双方协商一致，可以解除本合同。乙方确需提前解除合同的，应提前30日书面通知甲方，并按实际居住天数结算租金。",
+          "risk_level": "medium",
+          "risk_type": "单方解除权不对等、未约定出租方提前收回房屋的限制与责任、押金处置不明"
+        },
+        {
+          "clause": "甲方（签章）：齐某某 2026年9月　日；乙方（签章）：易某某 2026年9月　日",
+          "risk_level": "low",
+          "risk_type": "提示：签署日期填写不完整"
+        }
+      ]
+    },
+    {
+      "contract_id": "C13",
+      "contract_file": "contract_13.txt",
+      "elapsed_sec": 14.84,
+      "annotated": 2,
+      "predicted": 5,
+      "tp": 2,
+      "fp": 3,
+      "fn": 0,
+      "level_hit": 2,
+      "missed": [],
+      "false_positive": [
+        {
+          "clause": "乙方逾期支付租金的，每逾期一日按月租金的0.5%支付违约金；逾期超过15日的，甲方有权解除合同并收回房屋。乙方违反合同约定使用房屋的，甲方有权要求乙方限期改正。",
+          "risk_level": "high",
+          "risk_type": "违约金畸高、违约责任不对等、甲方违约责任缺失"
+        },
+        {
+          "clause": "乙方于签订本合同时向甲方支付押金3300元（大写：叁仟叁佰元整）。押金用于担保乙方履行本合同义务。",
+          "risk_level": "medium",
+          "risk_type": "押金返还条件、期限及扣减标准缺失"
+        },
+        {
+          "clause": "甲方（签章）：石某某 2026年9月　日；乙方（签章）：尹某某 2026年9月　日",
+          "risk_level": "low",
+          "risk_type": "提示：签署日期空白"
+        }
+      ]
+    },
+    {
+      "contract_id": "C14",
+      "contract_file": "contract_14.txt",
+      "elapsed_sec": 20.24,
+      "annotated": 1,
+      "predicted": 3,
+      "tp": 1,
+      "fp": 2,
+      "fn": 0,
+      "level_hit": 1,
+      "missed": [],
+      "false_positive": [
+        {
+          "clause": "第四条 乙方于签订本合同时向甲方支付押金4600元（大写：肆仟陆佰元整）。租赁期满，乙方结清各项费用、返还房屋并经甲方验收无损坏的，押金全额无息退还。",
+          "risk_level": "medium",
+          "risk_type": "押金退还条件未排除正常使用损耗、未约定退还期限"
+        },
+        {
+          "clause": "甲方（签章）：华某某 2026年11月　日；乙方（签章）：温某某 2026年11月　日",
+          "risk_level": "low",
+          "risk_type": "提示：签署日期空白"
+        }
+      ]
+    },
+    {
+      "contract_id": "C15",
+      "contract_file": "contract_15.txt",
+      "elapsed_sec": 10.86,
+      "annotated": 2,
+      "predicted": 6,
+      "tp": 2,
+      "fp": 4,
+      "fn": 0,
+      "level_hit": 0,
+      "missed": [],
+      "false_positive": [
+        {
+          "clause": "第四条 押金：乙方于本合同签订时向甲方支付押金3100元（大写：叁仟壹佰元整）。租赁期满，乙方结清各项费用、返还房屋并经甲方验收无损坏的，押金予以退还。",
+          "risk_level": "medium",
+          "risk_type": "押金退还条件模糊、未排除自然损耗、未约定退还期限"
+        },
+        {
+          "clause": "第八条 维修责任：房屋及附属设施因自然损耗或质量问题发生故障的，由甲方负责维修并承担费用；因乙方使用不当造成损坏的，由乙方负责修复或赔偿。甲方应在收到报修通知后5日内安排维修。",
+          "risk_level": "medium",
+          "risk_type": "维修救济措施缺失、维修期间租金减免未约定"
+        },
+        {
+          "clause": "第十一条 违约责任：乙方逾期支付租金的，每逾期一日按月租金的0.5%支付违约金；逾期超过15日的，甲方有权解除合同并收回房屋。",
+          "risk_level": "high",
+          "risk_type": "违约金标准畸高、违约责任单方化、解除条件过严"
+        },
+        {
+          "clause": "甲方（签章）：苗某某 2026年9月　日；乙方（签章）：白某某 2026年9月　日",
+          "risk_level": "low",
+          "risk_type": "提示：签署日期空白"
+        }
+      ]
+    },
+    {
+      "contract_id": "C16",
+      "contract_file": "contract_16.txt",
+      "elapsed_sec": 12.59,
+      "annotated": 2,
+      "predicted": 6,
+      "tp": 2,
+      "fp": 4,
+      "fn": 0,
+      "level_hit": 0,
+      "missed": [],
+      "false_positive": [
+        {
+          "clause": "乙方逾期支付租金的，每逾期一日按月租金的0.5%支付违约金；逾期超过15日的，甲方有权解除合同并收回房屋。",
+          "risk_level": "high",
+          "risk_type": "违约金畸高、违约责任不对等"
+        },
+        {
+          "clause": "乙方于本合同签订时向甲方支付押金2600元（大写：贰仟陆佰元整）。租赁期满，乙方结清各项费用、返还房屋并经甲方验收无损坏的，押金予以退还。",
+          "risk_level": "medium",
+          "risk_type": "押金退还条件宽泛、未约定退还期限"
+        },
+        {
+          "clause": "经甲乙双方协商一致，可以解除本合同。乙方确需提前解除合同的，应提前30日书面通知甲方，并按实际居住天数结算租金。",
+          "risk_level": "medium",
+          "risk_type": "解除权约定不对等、出租方违约责任与单方解除权缺失"
+        },
+        {
+          "clause": "甲方（签章）：夏某某 2026年9月　日；乙方（签章）：蔡某某 2026年9月　日",
+          "risk_level": "low",
+          "risk_type": "提示：签署日期未填写完整"
+        }
+      ]
+    },
+    {
+      "contract_id": "C17",
+      "contract_file": "contract_17.txt",
+      "elapsed_sec": 16.46,
+      "annotated": 2,
+      "predicted": 6,
+      "tp": 2,
+      "fp": 4,
+      "fn": 0,
+      "level_hit": 1,
+      "missed": [],
+      "false_positive": [
+        {
+          "clause": "第十一条 违约责任：乙方逾期支付租金的，每逾期一日按月租金的0.5%支付违约金；逾期超过15日的，甲方有权解除合同并收回房屋。",
+          "risk_level": "high",
+          "risk_type": "违约金畸高、违约责任单向不对等"
+        },
+        {
+          "clause": "第四条 押金：乙方于本合同签订时向甲方支付押金2700元（大写：贰仟柒佰元整）。租赁期满，乙方结清各项费用、返还房屋并经甲方验收无损坏的，押金予以退还。",
+          "risk_level": "medium",
+          "risk_type": "押金退还期限缺失、验收标准由甲方单方掌握"
+        },
+        {
+          "clause": "第八条 维修责任：房屋及附属设施因自然损耗或质量问题发生故障的，由甲方负责维修并承担费用；因乙方使用不当造成损坏的，由乙方负责修复或赔偿。甲方应在收到报修通知后5日内安排维修。",
+          "risk_level": "medium",
+          "risk_type": "缺少甲方怠于维修时承租人的自行维修权及费用抵扣权、缺少影响居住时的减租或解约权"
+        },
+        {
+          "clause": "甲方（签章）：戚某某　2026年10月　日；乙方（签章）：单某某　2026年10月　日",
+          "risk_level": "low",
+          "risk_type": "提示：签署日期空白"
+        }
+      ]
+    },
+    {
+      "contract_id": "C18",
+      "contract_file": "contract_18.txt",
+      "elapsed_sec": 14.86,
+      "annotated": 3,
+      "predicted": 5,
+      "tp": 3,
+      "fp": 2,
+      "fn": 0,
+      "level_hit": 3,
+      "missed": [],
+      "false_positive": [
+        {
+          "clause": "乙方逾期支付租金的，每逾期一日按月租金的0.5%支付违约金；逾期超过15日的，甲方有权解除合同并收回房屋。乙方违反合同约定使用房屋的，甲方有权要求乙方限期改正。",
+          "risk_level": "high",
+          "risk_type": "违约金畸高、违约责任仅约束乙方、甲方违约责任完全缺失"
+        },
+        {
+          "clause": "甲方（签章）：蒋某某 2026年9月　日；乙方（签章）：田某某 2026年9月　日",
+          "risk_level": "low",
+          "risk_type": "提示：签署日期空白"
+        }
+      ]
+    }
+  ]
+}
