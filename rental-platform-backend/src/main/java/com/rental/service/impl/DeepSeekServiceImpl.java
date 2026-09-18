@@ -7,9 +7,15 @@ import com.rental.config.DeepSeekConfig;
 import com.rental.entity.AiConversation;
 import com.rental.mapper.AiConversationMapper;
 import com.rental.service.DeepSeekService;
+import com.rental.service.LegalKnowledgeService;
+import com.rental.common.RapidOcrEngine;
+import dev.langchain4j.data.segment.TextSegment;
 import okhttp3.*;
+import okio.BufferedSource;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.hwpf.extractor.WordExtractor;
@@ -21,9 +27,13 @@ import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+
+import javax.imageio.ImageIO;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -48,9 +58,44 @@ public class DeepSeekServiceImpl implements DeepSeekService {
     @Autowired
     private AiConversationMapper aiConversationMapper;
 
+    @Autowired
+    private LegalKnowledgeService legalKnowledgeService;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final String SYSTEM_PROMPT = "你是专业的租房法律顾问，精通房屋租赁相关法律法规。请基于中国法律为用户提供专业、准确的法律咨询建议。回答时请引用相关法律条文。";
+
+    /**
+     * 构建带 RAG 上下文的 system prompt：检索与问题最相关的 Top-5 法律条文注入，
+     * 并要求模型在回答末尾以「依据：《...》第...条」格式列明引用，避免编造条文。
+     */
+    private String buildRagSystemPrompt(String question) {
+        StringBuilder sb = new StringBuilder(SYSTEM_PROMPT);
+        // 单元测试手动 new 服务实例时该字段为 null，此时退回普通回答模式
+        if (legalKnowledgeService == null) {
+            return sb.toString();
+        }
+        try {
+            List<TextSegment> hits = legalKnowledgeService.searchTop5(question);
+            if (!hits.isEmpty()) {
+                sb.append("\n\n以下是与用户问题最相关的现行法律条文，请优先依据这些条文回答，")
+                  .append("不要引用这些条文之外的条文号，并在回答末尾另起一行，")
+                  .append("以「依据：《法律名称》第X条」的格式列明本次回答所引用的条文：\n");
+                for (TextSegment segment : hits) {
+                    String source = segment.metadata().getString("source");
+                    String article = segment.metadata().getString("article");
+                    sb.append("\n【").append(source);
+                    if (article != null) {
+                        sb.append(" ").append(article);
+                    }
+                    sb.append("】\n").append(segment.text()).append('\n');
+                }
+            }
+        } catch (Exception e) {
+            log.warn("法律条文检索失败，退回普通回答模式", e);
+        }
+        return sb.toString();
+    }
 
     @Override
     public Map<String, String> chat(String question, String conversationId, Long userId) {
@@ -62,9 +107,9 @@ public class DeepSeekServiceImpl implements DeepSeekService {
                 conversationId = UUID.randomUUID().toString();
             }
 
-            // 组装多轮对话历史（最近10条）
+            // 组装多轮对话历史（最近10条），system prompt 注入 RAG 检索的相关法律条文
             List<Map<String, String>> messages = new ArrayList<>();
-            messages.add(Map.of("role", "system", "content", SYSTEM_PROMPT));
+            messages.add(Map.of("role", "system", "content", buildRagSystemPrompt(question)));
             messages.addAll(loadHistory(userId, conversationId));
             messages.add(Map.of("role", "user", "content", question));
 
@@ -239,7 +284,11 @@ public class DeepSeekServiceImpl implements DeepSeekService {
         String requestBody = objectMapper.writeValueAsString(Map.of(
             "model", deepSeekConfig.getModel(),
             "messages", List.of(
-                Map.of("role", "system", "content", "你是专业的合同审查专家，精通房屋租赁合同法。你必须严格按照JSON数组格式返回审查结果，不要包含任何其他文字。"),
+                Map.of("role", "system", "content",
+                        "你是专业的合同审查专家，精通房屋租赁相关法律。你只报告对承租人权益有实际影响的"
+                                + "实质性风险，不报告行业惯例条款；同一条款的多个风险点合并为一条记录；"
+                                + "填写完整性问题以「提示：」开头且定级为 low。"
+                                + "你必须严格按照JSON数组格式返回审查结果，不要包含任何其他文字。"),
                 Map.of("role", "user", "content", reviewPrompt)
             ),
             "temperature", 0.3
@@ -312,19 +361,34 @@ public class DeepSeekServiceImpl implements DeepSeekService {
     }
 
     private String buildReviewPrompt(String contractContent) {
-        return "请仔细审查以下房屋租赁合同内容，识别其中可能存在的法律风险条款和不合理约定。\n\n"
+        return "请审查以下房屋租赁合同，只识别对承租人权益有实际影响的实质性风险。\n\n"
                 + "合同内容：\n" + contractContent + "\n\n"
-                + "请从以下几个维度进行审查：\n"
-                + "1. 租金与押金条款是否合理\n"
-                + "2. 租期与续租条款是否公平\n"
-                + "3. 维修责任划分是否明确\n"
-                + "4. 违约条款是否对等\n"
-                + "5. 退租与押金返还条款是否合理\n"
-                + "6. 其他可能存在的法律风险\n\n"
-                + "请严格按照以下JSON数组格式返回审查结果，每个风险点作为一个元素，不要添加任何额外的解释文字：\n"
+                + "【实质性风险判定标准】仅报告对承租人权益有实际影响的问题，即：\n"
+                + "- 金额明显超标或不合理（如违约金畸高、押金扣留条件苛刻）；\n"
+                + "- 责任明显不对等（如仅约束一方、单方解除权失衡）；\n"
+                + "- 权利义务严重缺失（如缺少关键保障约定且对承租人不利）；\n"
+                + "- 约定与法律法规强制性规定冲突。\n\n"
+                + "【禁止报告】以下行业惯例条款不得作为风险输出：水电燃气网络费由租客承担、"
+                + "供暖费常规分担、交接清单签字确认、通知送达方式、日常合理使用注意事项、"
+                + "税费常规约定等；除非该条款存在明显异常（如费用重复收取、金额畸高、附加苛刻条件）。\n\n"
+                + "【填写完整性问题】日期空位、签署栏空白、待填项未填等不影响权利义务内容的填写问题，"
+                + "单独归类：riskLevel 一律为 low，且 riskType 必须以「提示：」开头"
+                + "（例如「提示：签署日期空白」），与实质性风险明确区分。\n\n"
+                + "审查维度（参考）：\n"
+                + "1. 押金金额与返还条件是否明显不合理\n"
+                + "2. 租期与续租条款是否显失公平\n"
+                + "3. 维修责任划分是否严重失衡\n"
+                + "4. 违约责任是否明显不对等、违约金是否畸高\n"
+                + "5. 提前退租与单方解除权是否被不当限制\n"
+                + "6. 与法律强制性规定冲突的条款\n\n"
+                + "【输出要求】\n"
+                + "- 同一条款存在多个风险点时，必须合并为一条记录，riskType 内用顿号（、）连接，"
+                + "禁止将同一条款拆成多条重复记录；\n"
+                + "- 每条记录的 clauseContent 引用条款原文，同一条款在结果中只出现一次；\n"
+                + "- 严格按以下 JSON 数组格式返回，每个风险点作为一个元素，不要添加任何额外的解释文字：\n"
                 + "[{\"clauseContent\": \"相关条款原文\", \"riskType\": \"风险类型\", \"riskLevel\": \"high/medium/low\", "
                 + "\"riskExplanation\": \"风险说明\", \"suggestion\": \"修改建议\", \"isHighRisk\": true/false}]\n"
-                + "如果没有发现风险，请返回空数组 []。";
+                + "- 没有实质性风险时返回空数组 []（填写完整性提示除外，其 riskLevel 为 low）。";
     }
 
     @Override
@@ -339,7 +403,13 @@ public class DeepSeekServiceImpl implements DeepSeekService {
                 return new String(fileBytes, StandardCharsets.UTF_8);
             }
             if (lowerName.endsWith(".pdf")) {
-                return extractPdfText(fileBytes);
+                String text = extractPdfText(fileBytes);
+                // 提取文本为空或过短（去空白后 <50 字符）时判定为扫描件，转图片走 OCR 识别
+                if (isTextTooShort(text)) {
+                    log.info("PDF 文本层缺失或过短，判定为扫描件，启用 OCR 识别: {}", fileName);
+                    text = ocrPdfText(fileBytes);
+                }
+                return text;
             }
             if (lowerName.endsWith(".docx")) {
                 return extractDocxText(fileBytes);
@@ -350,8 +420,35 @@ public class DeepSeekServiceImpl implements DeepSeekService {
         } catch (Exception e) {
             log.error("文件内容解析失败: {}", fileName, e);
         }
-        log.warn("暂不支持解析该文件类型，请上传 TXT/PDF/Word 格式合同: {}", fileName);
+        log.warn("文件内容解析失败或暂不支持该文件类型，请上传含文本层的 TXT/PDF/Word 格式合同: {}", fileName);
         return null;
+    }
+
+    /**
+     * 判断提取到的文本是否过短（去空白后不足 50 字符），过短视为无有效文本层（扫描件）。
+     */
+    private boolean isTextTooShort(String text) {
+        return text == null || text.replaceAll("\\s+", "").length() < 50;
+    }
+
+    /**
+     * 将扫描版 PDF 逐页渲染为 200dpi 位图，交由 RapidOCR 识别后拼接全部页面文本。
+     */
+    private String ocrPdfText(byte[] fileBytes) throws IOException {
+        StringBuilder text = new StringBuilder();
+        try (PDDocument document = Loader.loadPDF(fileBytes)) {
+            PDFRenderer renderer = new PDFRenderer(document);
+            for (int i = 0; i < document.getNumberOfPages(); i++) {
+                BufferedImage image = renderer.renderImageWithDPI(i, 200, ImageType.RGB);
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                ImageIO.write(image, "png", out);
+                String pageText = RapidOcrEngine.recognize(out.toByteArray(), ".png");
+                if (pageText != null && !pageText.isBlank()) {
+                    text.append(pageText).append('\n');
+                }
+            }
+        }
+        return text.toString();
     }
 
     /**
@@ -360,6 +457,101 @@ public class DeepSeekServiceImpl implements DeepSeekService {
     private String extractPdfText(byte[] fileBytes) throws IOException {
         try (PDDocument document = Loader.loadPDF(fileBytes)) {
             return new PDFTextStripper().getText(document);
+        }
+    }
+
+    @Override
+    public void chatStream(String question, String conversationId, Long userId, StreamListener listener) {
+        try {
+            if (deepSeekConfig.getApiKey() == null || deepSeekConfig.getApiKey().isBlank()) {
+                throw new RuntimeException("未配置 DeepSeek API Key，请在环境变量 DEEPSEEK_API_KEY 中配置");
+            }
+            if (conversationId == null || conversationId.isBlank()) {
+                conversationId = UUID.randomUUID().toString();
+            }
+            String finalConversationId = conversationId;
+            listener.onStart(finalConversationId);
+
+            // 与同步 chat 相同的会话组装：RAG 条文注入 + 最近10条历史
+            List<Map<String, String>> messages = new ArrayList<>();
+            messages.add(Map.of("role", "system", "content", buildRagSystemPrompt(question)));
+            messages.addAll(loadHistory(userId, finalConversationId));
+            messages.add(Map.of("role", "user", "content", question));
+
+            String requestBody = objectMapper.writeValueAsString(Map.of(
+                "model", deepSeekConfig.getModel(),
+                "messages", messages,
+                "temperature", 0.7,
+                "stream", true
+            ));
+
+            String url = deepSeekConfig.getBaseUrl() + "/chat/completions";
+            log.info("发送DeepSeek流式请求: url={}, conversationId={}", url, finalConversationId);
+
+            Request httpRequest = new Request.Builder()
+                    .url(url)
+                    .header("Authorization", "Bearer " + deepSeekConfig.getApiKey())
+                    .header("Content-Type", "application/json")
+                    .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                    .build();
+
+            StringBuilder answerBuilder = new StringBuilder();
+            try (Response response = okHttpClient.newCall(httpRequest).execute()) {
+                if (!response.isSuccessful()) {
+                    String errorBody = response.body() != null ? response.body().string() : "";
+                    log.error("DeepSeek流式请求失败: status={}, body={}", response.code(), errorBody);
+                    throw new RuntimeException("AI服务请求失败: " + response.code());
+                }
+                // 逐行读取 SSE 流：data: {...} / data: [DONE]
+                BufferedSource source = response.body().source();
+                String line;
+                while ((line = source.readUtf8Line()) != null) {
+                    if (!line.startsWith("data:")) {
+                        continue;
+                    }
+                    String data = line.substring(5).trim();
+                    if ("[DONE]".equals(data)) {
+                        break;
+                    }
+                    String delta = extractDeltaContent(data);
+                    if (delta != null && !delta.isEmpty()) {
+                        answerBuilder.append(delta);
+                        listener.onDelta(delta);
+                    }
+                }
+            }
+
+            // 完成后落库，与同步 chat 保持一致
+            AiConversation conversation = new AiConversation();
+            conversation.setUserId(userId);
+            conversation.setQuestion(question);
+            conversation.setAnswer(answerBuilder.toString());
+            conversation.setConversationId(finalConversationId);
+            aiConversationMapper.insert(conversation);
+
+            log.info("DeepSeek流式对话完成: conversationId={}", finalConversationId);
+        } catch (IOException e) {
+            log.error("DeepSeek流式调用异常", e);
+            throw new RuntimeException("AI服务调用失败，请稍后重试");
+        }
+    }
+
+    /**
+     * 从 SSE 分片 JSON 中提取增量内容 choices[0].delta.content。
+     */
+    @SuppressWarnings("unchecked")
+    private String extractDeltaContent(String sseJson) {
+        try {
+            Map<String, Object> chunk = objectMapper.readValue(sseJson, new TypeReference<Map<String, Object>>() {});
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) chunk.get("choices");
+            if (choices == null || choices.isEmpty()) {
+                return null;
+            }
+            Map<String, Object> delta = (Map<String, Object>) choices.get(0).get("delta");
+            return delta == null ? null : (String) delta.get("content");
+        } catch (IOException e) {
+            log.warn("解析流式分片失败: {}", sseJson, e);
+            return null;
         }
     }
 

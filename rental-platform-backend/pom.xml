@@ -126,11 +126,36 @@
             <version>${okhttp.version}</version>
         </dependency>
 
+        <!-- RAG 法律条文向量化：LangChain4j 进程内 bge-small-zh-v1.5（量化版 ONNX，离线运行、无额外 API 依赖） -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j</artifactId>
+            <version>1.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-embeddings-bge-small-zh-v15-q</artifactId>
+            <version>1.0.1-beta6</version>
+        </dependency>
+
         <!-- PDF 合同解析 -->
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>pdfbox</artifactId>
             <version>3.0.8</version>
+        </dependency>
+
+        <!-- 扫描件 OCR：RapidOCR（ONNXRuntime 推理，纯 Java 无 Python 依赖，模型内置） -->
+        <dependency>
+            <groupId>io.github.mymonstercat</groupId>
+            <artifactId>rapidocr</artifactId>
+            <version>0.0.7</version>
+        </dependency>
+        <!-- CPU 端 ONNX 推理平台包：自动携带 Windows/macOS/Linux 原生库与 PP-OCR 模型 -->
+        <dependency>
+            <groupId>io.github.mymonstercat</groupId>
+            <artifactId>rapidocr-onnx-platform</artifactId>
+            <version>0.0.7</version>
         </dependency>
 
         <!-- Word 合同解析（.docx 与 .doc） -->
@@ -171,8 +196,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <!-- JDK 24+ 默认禁止动态加载 Agent（JEP 451）；net.bytebuddy.experimental 允许 ByteBuddy 支持新版 JDK -->
-                    <argLine>-XX:+EnableDynamicAgentLoading -Dnet.bytebuddy.experimental=true</argLine>
+                    <!-- JDK 24+ 默认禁止动态加载 Agent（JEP 451）；net.bytebuddy.experimental 允许 ByteBuddy 支持新版 JDK；
+                         RapidOCR 需要通过 JNI 加载 ONNXRuntime 原生库，显式放开本地访问限制 -->
+                    <argLine>-XX:+EnableDynamicAgentLoading -Dnet.bytebuddy.experimental=true --enable-native-access=ALL-UNNAMED</argLine>
                 </configuration>
             </plugin>
         </plugins>

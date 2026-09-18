@@ -14,6 +14,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 
@@ -49,6 +50,8 @@ public class SecurityConfig {
                 response.getWriter().write("{\"code\":403,\"message\":\"无权限访问\",\"data\":null}");
             }))
             .authorizeHttpRequests(auth -> auth
+                // SSE（SseEmitter）完成时会触发 ASYNC 二次分发，此时无认证上下文，需放行
+                .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                 .requestMatchers("/api/user/register", "/api/user/login").permitAll()
                 .requestMatchers("/doc.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/api/**").authenticated()
