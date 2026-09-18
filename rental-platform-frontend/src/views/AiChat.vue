@@ -71,7 +71,8 @@
               </div>
             </div>
 
-            <div v-if="sending" class="message-item message-left">
+            <!-- 等待首段增量时显示打字动画，首字到达后由流式气泡接管 -->
+            <div v-if="sending && waitingFirst" class="message-item message-left">
               <div class="message-avatar">
                 <el-avatar :size="36" :icon="Service" />
               </div>
@@ -110,13 +111,14 @@
 import { ref, nextTick, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { User, Service, Promotion, Plus, Delete } from '@element-plus/icons-vue'
-import { aiChat, getConversations, getConversationDetail, deleteConversation } from '@/api/ai'
+import { aiChatStream, getConversations, getConversationDetail, deleteConversation } from '@/api/ai'
 
 const welcomeMessage = '您好！我是您的AI租房顾问，您可以向我咨询任何租房相关的法律问题，比如：押金纠纷如何处理？合同到期不续租需要提前多久通知？房东私自进入房间是否违法？'
 
 const messages = ref([])
 const inputText = ref('')
 const sending = ref(false)
+const waitingFirst = ref(false)
 const conversationId = ref('')
 const conversations = ref([])
 const chatBodyRef = ref(null)
@@ -216,25 +218,52 @@ const handleSend = async () => {
   scrollToBottom()
 
   sending.value = true
+  waitingFirst.value = true
+  let aiMessage = null
   try {
-    const res = await aiChat({
-      question: text,
-      conversationId: conversationId.value || undefined
-    })
-    const data = res.data || res
-    conversationId.value = data.conversationId || conversationId.value
-    const reply = data.answer || '抱歉，我暂时无法回答您的问题。'
-    messages.value.push({
-      role: 'ai',
-      content: reply,
-      time: Date.now()
-    })
-    scrollToBottom()
-    loadConversations()
+    await aiChatStream(
+      {
+        question: text,
+        conversationId: conversationId.value || undefined
+      },
+      {
+        // 会话开始：记录后端下发的会话 ID，后续追问可延续上下文
+        onMeta: (id) => {
+          conversationId.value = id || conversationId.value
+        },
+        // 增量内容：首段到达时创建 AI 消息气泡，其后逐字追加（打字机效果）
+        onDelta: (delta) => {
+          waitingFirst.value = false
+          if (!aiMessage) {
+            aiMessage = { role: 'ai', content: '', time: Date.now() }
+            messages.value.push(aiMessage)
+          }
+          aiMessage.content += delta
+          scrollToBottom()
+        },
+        // 回答完成并已落库，刷新左侧会话列表
+        onDone: () => {
+          loadConversations()
+        },
+        onError: (message) => {
+          ElMessage.error(message || 'AI回复失败，请稍后重试')
+        }
+      }
+    )
+    // 流正常结束但没有任何增量（如服务端返回空），给出兜底提示
+    if (!aiMessage) {
+      messages.value.push({
+        role: 'ai',
+        content: '抱歉，我暂时无法回答您的问题。',
+        time: Date.now()
+      })
+    }
   } catch {
     ElMessage.error('AI回复失败，请稍后重试')
   } finally {
     sending.value = false
+    waitingFirst.value = false
+    scrollToBottom()
   }
 }
 
