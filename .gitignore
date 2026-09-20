@@ -49,3 +49,12 @@ tmp-*/
 docs/*讲稿.md
 docs/演示检查单.md
 docs/学习清单.md
+
+# Python 字节码缓存
+__pycache__/
+*.pyc
+
+# Agent Skills 的本地链接壳（真实内容在 .agents/skills/，此处仅为兼容软链接，避免仓库出现两份）
+.claude/skills/shadcn/
+.claude/skills/design-taste-frontend/
+.claude/skills/migrate-radix-to-base/

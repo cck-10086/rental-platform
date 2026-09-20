@@ -1,6 +1,6 @@
 <template>
   <div class="profile-container">
-    <el-card class="profile-card" shadow="hover">
+    <el-card class="profile-card" shadow="never">
       <template #header>
         <div class="card-header">
           <span class="card-title">个人信息</span>
@@ -32,7 +32,7 @@
     </el-card>
 
     <!-- 退出登录 -->
-    <el-card class="logout-card" shadow="hover">
+    <el-card class="logout-card" shadow="never">
       <el-button type="danger" @click="handleLogout">
         <el-icon><SwitchButton /></el-icon> 退出登录
       </el-button>

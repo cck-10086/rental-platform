@@ -1,6 +1,6 @@
 <template>
   <div class="upload-container">
-    <el-card class="upload-card" shadow="hover">
+    <el-card class="upload-card" shadow="never">
       <template #header>
         <span class="card-title">上传合同文件</span>
       </template>
@@ -136,13 +136,13 @@ const handleUpload = async () => {
 }
 
 .upload-card {
-  border-radius: 8px;
+  border-radius: 14px;
 }
 
 .card-title {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
-  color: #303133;
+  color: #1E293B;
 }
 
 .upload-area {
@@ -150,35 +150,38 @@ const handleUpload = async () => {
 }
 
 .upload-area :deep(.el-upload-dragger) {
-  border: 2px dashed #dcdfe6;
-  border-radius: 8px;
+  border: 1.5px dashed #CBD5E1;
+  border-radius: 12px;
+  background: #F8FAFC;
   padding: 48px 24px;
-  transition: border-color 0.3s;
+  transition: border-color 180ms cubic-bezier(0.16, 1, 0.3, 1), background 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .upload-area :deep(.el-upload-dragger:hover) {
-  border-color: #409eff;
+  border-color: #2563EB;
+  background: #EFF6FF;
 }
 
 .upload-icon {
-  color: #c0c4cc;
+  color: #94A3B8;
   margin-bottom: 16px;
 }
 
 .upload-text {
-  font-size: 16px;
-  color: #606266;
+  font-size: 15px;
+  color: #334155;
   margin-bottom: 8px;
 }
 
 .upload-text em {
   font-style: normal;
-  color: #409eff;
+  color: #2563EB;
+  font-weight: 500;
 }
 
 .upload-hint {
-  font-size: 13px;
-  color: #909399;
+  font-size: 12px;
+  color: #94A3B8;
   margin-top: 4px;
 }
 
@@ -193,5 +196,6 @@ const handleUpload = async () => {
 
 .upload-actions .el-button {
   min-width: 180px;
+  border-radius: 10px;
 }
 </style>

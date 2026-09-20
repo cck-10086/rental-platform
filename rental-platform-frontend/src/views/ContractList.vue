@@ -1,6 +1,14 @@
 <template>
   <div class="list-container">
-    <el-card class="list-card" shadow="hover">
+    <!-- 页头 -->
+    <div class="rp-page-header">
+      <div>
+        <h2>我的合同</h2>
+        <p class="rp-page-desc">已上传合同与 AI 审查状态,点击查看完整审查报告</p>
+      </div>
+    </div>
+
+    <el-card class="list-card" shadow="never">
       <!-- 搜索栏 -->
       <div class="search-bar">
         <el-input
@@ -21,7 +29,9 @@
       </div>
 
       <!-- 合同列表 -->
+      <el-skeleton v-if="loading && contracts.length === 0" :rows="6" animated />
       <el-table
+        v-else
         :data="contracts"
         stripe
         v-loading="loading"
@@ -207,10 +217,6 @@ onMounted(() => {
 .list-container {
   max-width: 1200px;
   margin: 0 auto;
-}
-
-.list-card {
-  border-radius: 8px;
 }
 
 .search-bar {

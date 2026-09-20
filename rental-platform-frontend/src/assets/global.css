@@ -1,3 +1,227 @@
+/* ============================================================
+   全局样式:简洁现代 SaaS 风格设计令牌 + Element Plus 主题统一
+   (蓝白配色 / 浅色毛玻璃 / 圆角卡片 / 细边框 / 轻阴影)
+   ============================================================ */
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
-#app { min-height: 100vh; background: #f5f7fa; }
+
+:root {
+  /* —— 设计令牌 —— */
+  --rp-bg: #F8FAFC;                 /* 页面底色 slate-50 */
+  --rp-surface: #FFFFFF;            /* 卡片面 */
+  --rp-glass: rgba(255, 255, 255, 0.78);  /* 毛玻璃面 */
+  --rp-glass-blur: 14px;
+  --rp-border: #E2E8F0;             /* 细边框 slate-200 */
+  --rp-divider: #F1F5F9;            /* 分隔线 slate-100 */
+  --rp-text: #1E293B;               /* 主文本 slate-800 */
+  --rp-text-secondary: #475569;     /* 次要文本 slate-600 */
+  --rp-text-muted: #64748B;         /* 弱化文本 slate-500(对比度达标) */
+  --rp-primary: #2563EB;            /* 主色 */
+  --rp-primary-hover: #1D4ED8;
+  --rp-primary-light: #EFF6FF;      /* 主色浅底 */
+  --rp-radius-card: 14px;
+  --rp-radius-btn: 10px;
+  --rp-radius-bubble: 16px;
+  --rp-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --rp-shadow-md: 0 8px 24px -12px rgba(37, 99, 235, 0.12); /* 带主色倾向的轻阴影 */
+  --rp-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --rp-duration: 180ms;
+
+  /* —— Element Plus 变量覆盖(全站组件自动跟随) —— */
+  --el-color-primary: #2563EB;
+  --el-color-primary-dark-2: #1D4ED8;
+  --el-color-primary-light-3: #6692F1;
+  --el-color-primary-light-5: #92B1F5;
+  --el-color-primary-light-7: #BED0F9;
+  --el-color-primary-light-8: #D4E0FB;
+  --el-color-primary-light-9: #EAF0FD;
+  /* 语义色统一:与 ECharts/风险条款卡同一套,消除"两套红" */
+  --el-color-danger: #DC2626;
+  --el-color-danger-light-3: #E6605C;
+  --el-color-danger-light-5: #ED9694;
+  --el-color-danger-light-7: #F4C3C2;
+  --el-color-danger-light-8: #F7D6D5;
+  --el-color-danger-light-9: #FDEBEB;
+  --el-color-warning: #D97706;
+  --el-color-warning-light-3: #E39A47;
+  --el-color-warning-light-5: #EBBC89;
+  --el-color-warning-light-7: #F3DDCB;
+  --el-color-warning-light-8: #F7E9DC;
+  --el-color-warning-light-9: #FBF3E8;
+  --el-color-success: #059669;
+  --el-color-success-light-3: #4DB692;
+  --el-color-success-light-5: #82D1B7;
+  --el-color-success-light-7: #B8E7D8;
+  --el-color-success-light-8: #D0F0E6;
+  --el-color-success-light-9: #ECFDF5;
+  --el-color-info: #475569;
+  --el-color-info-light-3: #7D899B;
+  --el-color-info-light-5: #A5AEC0;
+  --el-color-info-light-7: #CFD6E2;
+  --el-color-info-light-8: #DFE5EE;
+  --el-color-info-light-9: #F1F5F9;
+  --el-border-radius-base: 10px;
+  --el-border-color: #E2E8F0;
+  --el-border-color-light: #E2E8F0;
+  --el-border-color-lighter: #F1F5F9;
+  --el-text-color-primary: #1E293B;
+  --el-text-color-regular: #334155;
+  --el-text-color-secondary: #64748B;
+  --el-fill-color-light: #F8FAFC;
+  --el-fill-color-lighter: #F8FAFC;
+  --el-bg-color-page: #F8FAFC;
+  --el-font-family: -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+body {
+  font-family: -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  color: var(--rp-text);
+  background: var(--rp-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  min-height: 100vh;
+  background: #F8FAFC;
+  /* 极淡主色柔光:让侧栏/顶栏的毛玻璃有内容可模糊,玻璃质感真正可见 */
+  background-image:
+    radial-gradient(1100px circle at 12% 8%, rgba(37, 99, 235, 0.06), transparent 55%),
+    radial-gradient(900px circle at 88% 92%, rgba(37, 99, 235, 0.05), transparent 55%);
+  background-attachment: fixed;
+}
+
+/* 数字统一等宽,表格与统计卡更整齐 */
+.el-table, .stat-value, .tabular { font-variant-numeric: tabular-nums; }
+
+/* —— 卡片:圆角 + 细边框 + 轻阴影 —— */
+.el-card {
+  border-radius: var(--rp-radius-card);
+  border: 1px solid var(--rp-border);
+  box-shadow: var(--rp-shadow-sm);
+  transition: box-shadow var(--rp-duration) var(--rp-ease),
+              border-color var(--rp-duration) var(--rp-ease);
+}
+.el-card__header {
+  border-bottom: 1px solid var(--rp-divider);
+  font-weight: 500;
+}
+
+/* —— 表格:去外框、浅色表头、行 hover —— */
+.el-table {
+  --el-table-border-color: var(--rp-divider);
+  --el-table-header-bg-color: #F8FAFC;
+  --el-table-row-hover-bg-color: #F8FAFC;
+  border-radius: var(--rp-radius-btn);
+  overflow: hidden;
+}
+.el-table th.el-table__cell {
+  background: #F8FAFC;
+  color: var(--rp-text-secondary);
+  font-weight: 500;
+  font-size: 12px;
+}
+.el-table td.el-table__cell { color: var(--rp-text-secondary); }
+
+/* —— 标签:圆角、浅底深字 —— */
+.el-tag { border-radius: 6px; font-weight: 400; }
+
+/* —— 按钮:按压物理反馈 —— */
+.el-button:active { transform: scale(0.98); }
+.el-button { transition: all var(--rp-duration) var(--rp-ease); }
+
+/* —— 输入框:聚焦主色描边 —— */
+.el-input__wrapper,
+.el-textarea__inner { transition: box-shadow var(--rp-duration) var(--rp-ease); }
+
+/* —— 弹窗与下拉:圆角细边框 —— */
+.el-dialog, .el-message-box { border-radius: var(--rp-radius-card); border: 1px solid var(--rp-border); }
+.el-popper.is-light { border: 1px solid var(--rp-border); border-radius: var(--rp-radius-btn); }
+
+/* —— 细窄滚动条 —— */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* —— 键盘可达性:focus 主色描边 —— */
+:focus-visible { outline: 2px solid rgba(37, 99, 235, 0.5); outline-offset: 2px; }
+
+/* —— 页面切换渐入(适度动效) —— */
+@keyframes rp-fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.layout-main > * { animation: rp-fade-up 0.35s var(--rp-ease); }
+
+/* ============================================================
+   共享页面骨架(各业务页统一接入,新页面直接复用)
+   ============================================================ */
+
+/* —— 页头:大标题 + 一句描述 + 右侧主操作 —— */
+.rp-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.rp-page-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--rp-text);
+  margin: 0 0 4px;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+}
+.rp-page-header .rp-page-desc {
+  margin: 0;
+  font-size: 13px;
+  color: var(--rp-text-muted);
+  line-height: 1.5;
+}
+
+/* —— 卡片内工具栏(搜索/筛选行) —— */
+.rp-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+/* —— 分页容器 —— */
+.rp-pagination {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+/* —— 骨架屏:色彩对齐设计令牌,首屏加载不再白块 —— */
+.el-skeleton { --el-skeleton-color: #EDF1F7; }
+
+/* —— 全站表格统一空状态:插画 + 弱化文案(所有列表页自动生效) —— */
+.el-table__empty-block { padding: 36px 0; }
+.el-table__empty-text {
+  width: auto;
+  line-height: 1.6;
+  color: var(--rp-text-muted);
+  font-size: 13px;
+}
+.el-table__empty-text::before {
+  content: '';
+  display: block;
+  width: 72px;
+  height: 50px;
+  margin: 0 auto 12px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='50' viewBox='0 0 72 50'%3E%3Crect x='14' y='4' width='44' height='36' rx='5' fill='%23F1F5F9' stroke='%23CBD5E1' stroke-dasharray='5 4' stroke-width='1.5'/%3E%3Crect x='23' y='14' width='22' height='3.5' rx='1.75' fill='%23CBD5E1'/%3E%3Crect x='23' y='22' width='26' height='3.5' rx='1.75' fill='%23E2E8F0'/%3E%3Crect x='23' y='30' width='15' height='3.5' rx='1.75' fill='%23E2E8F0'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* —— 用户偏好减少动效时全部关闭 —— */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

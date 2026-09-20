@@ -1,13 +1,21 @@
 <template>
   <div class="list-container">
-    <el-card class="list-card" shadow="hover">
-      <!-- 顶部操作 -->
-      <div class="toolbar">
-        <el-button type="primary" @click="handleAdd">
-          <el-icon><Plus /></el-icon> 添加房源
-        </el-button>
+    <!-- 页头 -->
+    <div class="rp-page-header">
+      <div>
+        <h2>房源管理</h2>
+        <p class="rp-page-desc">维护房源信息与出租状态,租金押金一目了然</p>
       </div>
+      <el-button type="primary" @click="handleAdd">
+        <el-icon><Plus /></el-icon> 添加房源
+      </el-button>
+    </div>
 
+    <el-card class="list-card" shadow="never">
+      <!-- 首屏骨架屏 -->
+      <el-skeleton v-if="loading && houseList.length === 0" :rows="6" animated />
+
+      <template v-else>
       <!-- 房源列表 -->
       <el-table :data="houseList" stripe v-loading="loading" style="width: 100%">
         <el-table-column prop="title" label="标题" min-width="180" show-overflow-tooltip />
@@ -55,6 +63,7 @@
           @size-change="fetchList"
         />
       </div>
+      </template>
     </el-card>
 
     <!-- 添加/编辑房源弹窗 -->
@@ -268,14 +277,6 @@ onMounted(() => {
 .list-container {
   max-width: 1200px;
   margin: 0 auto;
-}
-
-.list-card {
-  border-radius: 8px;
-}
-
-.toolbar {
-  margin-bottom: 20px;
 }
 
 .pagination-wrapper {

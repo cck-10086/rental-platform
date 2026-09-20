@@ -10,7 +10,7 @@
     <!-- 加载状态 -->
     <div v-loading="loading" class="review-content">
       <!-- 合同基本信息 -->
-      <el-card class="info-card" shadow="hover">
+      <el-card class="info-card" shadow="never">
         <template #header>
           <div class="card-header">
             <span class="card-title">合同基本信息</span>
@@ -35,7 +35,7 @@
       </el-card>
 
       <!-- 审查摘要 -->
-      <el-card class="summary-card" shadow="hover">
+      <el-card class="summary-card" shadow="never">
         <template #header>
           <div class="card-header">
             <span class="card-title">审查摘要</span>
@@ -77,7 +77,7 @@
       </el-card>
 
       <!-- 风险条款详情 -->
-      <el-card class="clauses-card" shadow="hover">
+      <el-card class="clauses-card" shadow="never">
         <template #header>
           <div class="card-header">
             <span class="card-title">风险条款详情</span>
@@ -399,25 +399,25 @@ onMounted(() => {
 }
 
 .clause-item {
-  border: 1px solid #ebeef5;
-  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
   padding: 20px;
-  transition: border-color 0.3s;
+  transition: border-color 180ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .clause-item.clause-high {
-  border-left: 4px solid #f56c6c;
-  background: #fef0f0;
+  border-left: 3px solid #DC2626;
+  background: #FEF2F2;
 }
 
 .clause-item.clause-medium {
-  border-left: 4px solid #e6a23c;
-  background: #fdf6ec;
+  border-left: 3px solid #D97706;
+  background: #FFFBEB;
 }
 
 .clause-item.clause-low {
-  border-left: 4px solid #67c23a;
-  background: #f0f9eb;
+  border-left: 3px solid #059669;
+  background: #ECFDF5;
 }
 
 .clause-header {
@@ -455,14 +455,14 @@ onMounted(() => {
 }
 
 .clause-original-text {
-  background: #f5f7fa;
-  border-radius: 6px;
+  background: #F8FAFC;
+  border-radius: 8px;
   padding: 12px 16px;
   font-size: 14px;
-  line-height: 1.6;
-  color: #303133;
+  line-height: 1.7;
+  color: #334155;
   white-space: pre-wrap;
-  border-left: 3px solid #dcdfe6;
+  border-left: 3px solid #CBD5E1;
 }
 
 /* 解读和建议 */

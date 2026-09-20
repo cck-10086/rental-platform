@@ -1,6 +1,9 @@
 <template>
   <div class="login-container">
-    <el-card class="login-card" shadow="always">
+    <el-card class="login-card" shadow="never">
+      <div class="login-logo">
+        <el-icon :size="20" color="#ffffff"><House /></el-icon>
+      </div>
       <h1 class="login-title">智能租房合同审查平台</h1>
       <p class="login-subtitle">登录您的账户</p>
       <el-form ref="formRef" :model="form" :rules="rules" size="large" status-icon>
@@ -24,7 +27,7 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { User, Lock } from '@element-plus/icons-vue'
+import { User, Lock, House } from '@element-plus/icons-vue'
 import { login } from '@/api/user'
 import { useUserStore } from '@/store/user'
 
@@ -69,36 +72,70 @@ const handleLogin = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #F6F8FC;
+  /* 三团主色系柔光(蓝 + 浅天蓝),浓度提到肉眼可辨,玻璃卡透出层次 */
+  background-image:
+    radial-gradient(900px circle at 12% 18%, rgba(37, 99, 235, 0.16), transparent 55%),
+    radial-gradient(700px circle at 88% 82%, rgba(37, 99, 235, 0.12), transparent 55%),
+    radial-gradient(560px circle at 82% 10%, rgba(14, 165, 233, 0.12), transparent 60%);
+  background-attachment: fixed;
+  padding: 24px;
 }
 .login-card {
   width: 420px;
-  border-radius: 12px;
-  padding: 12px 8px;
+  border-radius: 18px;
+  padding: 20px 16px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 24px 48px -20px rgba(37, 99, 235, 0.28),
+    0 2px 6px rgba(15, 23, 42, 0.04);
+  animation: login-card-in 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes login-card-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+.login-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #3B82F6, #2563EB);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 6px auto 16px;
+  box-shadow: 0 10px 22px -8px rgba(37, 99, 235, 0.55);
 }
 .login-title {
   text-align: center;
-  font-size: 24px;
-  color: #409eff;
+  font-size: 21px;
+  color: #0F172A;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   margin-bottom: 8px;
 }
 .login-subtitle {
   text-align: center;
-  color: #909399;
-  margin-bottom: 32px;
-  font-size: 14px;
+  color: #64748B;
+  margin-bottom: 30px;
+  font-size: 13px;
 }
 .login-btn {
   width: 100%;
+  border-radius: 10px;
 }
 .login-footer {
   text-align: center;
-  font-size: 14px;
-  color: #909399;
+  font-size: 13px;
+  color: #64748B;
 }
 .link {
-  color: #409eff;
+  color: #2563EB;
   text-decoration: none;
+  font-weight: 500;
 }
 .link:hover {
   text-decoration: underline;

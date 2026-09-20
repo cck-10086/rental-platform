@@ -1,13 +1,21 @@
 <template>
   <div class="list-container">
-    <el-card class="list-card" shadow="hover">
-      <!-- 顶部操作 -->
-      <div class="toolbar">
-        <el-button type="primary" @click="handleAdd">
-          <el-icon><Plus /></el-icon> 创建退租清单
-        </el-button>
+    <!-- 页头 -->
+    <div class="rp-page-header">
+      <div>
+        <h2>退租管理</h2>
+        <p class="rp-page-desc">退租清单与押金结算记录,应退金额自动计算</p>
       </div>
+      <el-button type="primary" @click="handleAdd">
+        <el-icon><Plus /></el-icon> 创建退租清单
+      </el-button>
+    </div>
 
+    <el-card class="list-card" shadow="never">
+      <!-- 首屏骨架屏 -->
+      <el-skeleton v-if="loading && moveOutList.length === 0" :rows="6" animated />
+
+      <template v-else>
       <!-- 退租列表 -->
       <el-table :data="moveOutList" stripe v-loading="loading" style="width: 100%">
         <el-table-column label="合同信息" min-width="160">
@@ -63,6 +71,7 @@
           @size-change="fetchList"
         />
       </div>
+      </template>
     </el-card>
 
     <!-- 创建/编辑退租清单弹窗 -->
@@ -270,14 +279,6 @@ onMounted(() => {
 .list-container {
   max-width: 1200px;
   margin: 0 auto;
-}
-
-.list-card {
-  border-radius: 8px;
-}
-
-.toolbar {
-  margin-bottom: 20px;
 }
 
 .pagination-wrapper {

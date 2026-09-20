@@ -1,6 +1,14 @@
 <template>
   <div class="admin-data-container">
-    <el-card shadow="hover" class="list-card">
+    <!-- 页头 -->
+    <div class="rp-page-header">
+      <div>
+        <h2>全局数据</h2>
+        <p class="rp-page-desc">平台全量业务数据总览,按类别切换查看</p>
+      </div>
+    </div>
+
+    <el-card shadow="never" class="list-card">
       <el-tabs v-model="activeTab" @tab-change="handleTabChange">
         <el-tab-pane v-for="tab in tabs" :key="tab.name" :label="tab.label" :name="tab.name" />
       </el-tabs>
@@ -25,7 +33,8 @@
       </div>
 
       <!-- 数据表格 -->
-      <el-table :data="rows" stripe v-loading="loading" style="width: 100%">
+      <el-skeleton v-if="loading && rows.length === 0" :rows="6" animated />
+      <el-table v-else :data="rows" stripe v-loading="loading" style="width: 100%">
         <el-table-column
           v-for="col in columns"
           :key="col.prop"

@@ -1,6 +1,14 @@
 <template>
   <div class="admin-users-container">
-    <el-card class="list-card" shadow="hover">
+    <!-- 页头 -->
+    <div class="rp-page-header">
+      <div>
+        <h2>用户管理</h2>
+        <p class="rp-page-desc">平台账号的角色、状态与密码管理</p>
+      </div>
+    </div>
+
+    <el-card class="list-card" shadow="never">
       <!-- 搜索栏 -->
       <div class="search-bar">
         <el-input
@@ -21,7 +29,8 @@
       </div>
 
       <!-- 用户列表 -->
-      <el-table :data="users" stripe v-loading="loading" style="width: 100%">
+      <el-skeleton v-if="loading && users.length === 0" :rows="6" animated />
+      <el-table v-else :data="users" stripe v-loading="loading" style="width: 100%">
         <el-table-column prop="id" label="ID" width="70" />
         <el-table-column prop="username" label="用户名" min-width="120" show-overflow-tooltip />
         <el-table-column prop="nickname" label="昵称" min-width="120" show-overflow-tooltip />

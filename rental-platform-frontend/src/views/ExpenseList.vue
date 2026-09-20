@@ -1,13 +1,21 @@
 <template>
   <div class="list-container">
-    <el-card class="list-card" shadow="hover">
-      <!-- 顶部操作 -->
-      <div class="toolbar">
-        <el-button type="primary" @click="handleAdd">
-          <el-icon><Plus /></el-icon> 添加费用
-        </el-button>
+    <!-- 页头 -->
+    <div class="rp-page-header">
+      <div>
+        <h2>费用管理</h2>
+        <p class="rp-page-desc">水电燃气等账单登记与缴费状态跟踪</p>
       </div>
+      <el-button type="primary" @click="handleAdd">
+        <el-icon><Plus /></el-icon> 添加费用
+      </el-button>
+    </div>
 
+    <el-card class="list-card" shadow="never">
+      <!-- 首屏骨架屏 -->
+      <el-skeleton v-if="loading && expenseList.length === 0" :rows="6" animated />
+
+      <template v-else>
       <!-- 费用列表 -->
       <el-table :data="expenseList" stripe v-loading="loading" style="width: 100%">
         <el-table-column label="费用类型" width="120">
@@ -69,6 +77,7 @@
           @size-change="fetchList"
         />
       </div>
+      </template>
     </el-card>
 
     <!-- 添加/编辑费用弹窗 -->
@@ -275,14 +284,6 @@ onMounted(() => {
 .list-container {
   max-width: 1200px;
   margin: 0 auto;
-}
-
-.list-card {
-  border-radius: 8px;
-}
-
-.toolbar {
-  margin-bottom: 20px;
 }
 
 .pagination-wrapper {
