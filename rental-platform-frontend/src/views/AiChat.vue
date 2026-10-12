@@ -22,6 +22,15 @@
           <h2>AI 租房顾问</h2>
           <p>合同风险与租住事务咨询</p>
         </div>
+        <span
+          v-if="contractContext"
+          class="contract-badge"
+          :title="`已关联合同：《${contractContext.title}》`"
+        >
+          <span class="contract-badge__label">已关联合同</span>
+          <span class="contract-badge__title">《{{ contractContext.title }}》</span>
+          <span class="contract-badge__stat">高 {{ contractContext.highCount }} · 中 {{ contractContext.mediumCount }}</span>
+        </span>
         <div class="chat-status"><span></span>在线</div>
       </header>
 
@@ -93,9 +102,9 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { PanelLeft, Send } from '@lucide/vue'
 import ConversationList from '@/components/chat/ConversationList.vue'
 import MessageScroller from '@/components/chat/MessageScroller.vue'
-import { aiChatStream, deleteConversation, getConversationDetail, getConversations } from '@/api/ai'
+import { aiChatStream, deleteConversation, getConversationDetail, getContractContext, getConversations } from '@/api/ai'
 
-/* 快捷问题:围绕论文核心场景 */
+/* 快捷问题:围绕租房业务核心场景 */
 const quickQuestions = [
   '押金纠纷如何处理？',
   '不续租需要提前多久通知？',
@@ -116,6 +125,17 @@ const streamError = ref('')
 const lastQuestion = ref('')
 const historyOpen = ref(false)
 const messageScrollerRef = ref(null)
+const contractContext = ref(null)
+
+/* 拉取最近已审查合同摘要，有则展示"已关联合同"标识；失败静默降级不影响聊天 */
+const loadContractContext = async () => {
+  try {
+    const response = await getContractContext()
+    contractContext.value = response.data || null
+  } catch {
+    contractContext.value = null
+  }
+}
 
 const loadConversations = async () => {
   conversationsLoading.value = true
@@ -221,7 +241,10 @@ const handleRetry = () => {
   handleSend()
 }
 
-onMounted(loadConversations)
+onMounted(() => {
+  loadConversations()
+  loadContractContext()
+})
 </script>
 
 <style scoped>
@@ -264,6 +287,26 @@ onMounted(loadConversations)
 .chat-header__copy p { margin: 2px 0 0; overflow: hidden; color: var(--rp-text-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .chat-status { display: flex; align-items: center; gap: 6px; margin-left: auto; color: var(--rp-success); font-size: 11px; }
 .chat-status span { width: 6px; height: 6px; border-radius: 50%; background: var(--rp-success); }
+
+/* 已关联合同标识:低饱和徽标，标题超长省略 */
+.contract-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 42%;
+  min-width: 0;
+  margin-left: auto;
+  padding: 3px 10px;
+  border: 1px solid var(--rp-border);
+  border-radius: 999px;
+  background: var(--rp-surface-muted);
+  color: var(--rp-text-secondary);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.contract-badge__label { flex: 0 0 auto; color: var(--rp-primary-hover); font-weight: 600; }
+.contract-badge__title { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.contract-badge__stat { flex: 0 0 auto; color: var(--rp-text-muted); }
 .history-trigger { display: none; width: 32px; height: 32px; place-items: center; border: 1px solid var(--rp-border); border-radius: var(--rp-radius-btn); background: var(--rp-surface); color: var(--rp-text-secondary); cursor: pointer; }
 .chat-thread { min-height: 0; overflow: hidden; }
 
@@ -299,6 +342,8 @@ onMounted(loadConversations)
 @media (max-width: 767px) {
   .chat-header { min-height: 52px; padding: 8px 12px; }
   .chat-status { display: none; }
+  .contract-badge { max-width: 55%; padding: 2px 8px; }
+  .contract-badge__stat { display: none; }
   .chat-composer { padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); }
   .composer-hint { display: none; }
 }

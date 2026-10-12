@@ -5,7 +5,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rental.config.DeepSeekConfig;
 import com.rental.entity.AiConversation;
+import com.rental.entity.Contract;
+import com.rental.entity.ReviewRecord;
 import com.rental.mapper.AiConversationMapper;
+import com.rental.mapper.ContractMapper;
+import com.rental.mapper.ReviewRecordMapper;
 import com.rental.service.DeepSeekService;
 import com.rental.service.LegalKnowledgeService;
 import com.rental.common.RapidOcrEngine;
@@ -61,6 +65,12 @@ public class DeepSeekServiceImpl implements DeepSeekService {
     @Autowired
     private LegalKnowledgeService legalKnowledgeService;
 
+    @Autowired
+    private ContractMapper contractMapper;
+
+    @Autowired
+    private ReviewRecordMapper reviewRecordMapper;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final String SYSTEM_PROMPT = "你是专业的租房法律顾问，精通房屋租赁相关法律法规。请基于中国法律为用户提供专业、准确的法律咨询建议。回答时请引用相关法律条文。";
@@ -97,6 +107,76 @@ public class DeepSeekServiceImpl implements DeepSeekService {
         return sb.toString();
     }
 
+    /**
+     * 查询用户最近一份已完成审查的合同（按 id 倒序取第一条），无则返回 null。
+     */
+    private Contract findLatestReviewedContract(Long userId) {
+        return contractMapper.selectOne(new LambdaQueryWrapper<Contract>()
+                .eq(Contract::getUserId, userId)
+                .eq(Contract::getStatus, "completed")
+                .orderByDesc(Contract::getId)
+                .last("LIMIT 1"));
+    }
+
+    /** 风险等级排序权重：high 最前、medium 次之、low 最后。
+     *  入库的 riskLevel 为中文（高风险/中风险/低风险），同时兼容英文以防外部传入。 */
+    private int levelWeight(String level) {
+        if (level == null) {
+            return 2;
+        }
+        if (level.contains("high") || level.contains("高")) {
+            return 0;
+        }
+        if (level.contains("medium") || level.contains("中")) {
+            return 1;
+        }
+        return 2;
+    }
+
+    /**
+     * 构建用户最近已审查合同的 Top5 风险摘要，注入聊天 system prompt，
+     * 使 AI 顾问能针对用户上传合同的具体风险给出针对性建议；无已审查合同或查询失败返回空串。
+     */
+    private String buildContractContext(Long userId) {
+        // 单元测试手动 new 服务实例时 mapper 为 null，此时跳过合同上下文注入
+        if (contractMapper == null || reviewRecordMapper == null || userId == null) {
+            return "";
+        }
+        try {
+            Contract contract = findLatestReviewedContract(userId);
+            if (contract == null) {
+                return "";
+            }
+            List<ReviewRecord> records = reviewRecordMapper.selectList(
+                    new LambdaQueryWrapper<ReviewRecord>()
+                            .eq(ReviewRecord::getContractId, contract.getId()));
+            // 低风险为填写提示类不计入风险摘要，其余按等级权重排序取前 5 条
+            List<ReviewRecord> topRisks = records.stream()
+                    .filter(r -> levelWeight(r.getRiskLevel()) < 2)
+                    .sorted((a, b) -> levelWeight(a.getRiskLevel()) - levelWeight(b.getRiskLevel()))
+                    .limit(5)
+                    .toList();
+            if (topRisks.isEmpty()) {
+                return "";
+            }
+            StringBuilder sb = new StringBuilder("\n\n用户名下最近一份已审查合同《")
+                    .append(contract.getTitle())
+                    .append("》发现以下主要风险条款（回答与该合同相关的咨询时请结合这些条款给出针对性建议，")
+                    .append("与合同无关的通用问题正常回答即可）：\n");
+            for (int i = 0; i < topRisks.size(); i++) {
+                ReviewRecord record = topRisks.get(i);
+                sb.append(i + 1).append(". [").append(record.getRiskLevel()).append("] ")
+                        .append(record.getRiskType()).append("：")
+                        .append(record.getRiskExplanation()).append('\n');
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            // 合同上下文注入失败不应阻断聊天主链路，记录日志后降级为通用咨询
+            log.warn("合同上下文注入失败，降级为通用咨询模式", e);
+            return "";
+        }
+    }
+
     @Override
     public Map<String, String> chat(String question, String conversationId, Long userId) {
         try {
@@ -109,7 +189,8 @@ public class DeepSeekServiceImpl implements DeepSeekService {
 
             // 组装多轮对话历史（最近10条），system prompt 注入 RAG 检索的相关法律条文
             List<Map<String, String>> messages = new ArrayList<>();
-            messages.add(Map.of("role", "system", "content", buildRagSystemPrompt(question)));
+            messages.add(Map.of("role", "system", "content",
+                    buildRagSystemPrompt(question) + buildContractContext(userId)));
             messages.addAll(loadHistory(userId, conversationId));
             messages.add(Map.of("role", "user", "content", question));
 
@@ -248,6 +329,40 @@ public class DeepSeekServiceImpl implements DeepSeekService {
                 new LambdaQueryWrapper<AiConversation>()
                         .eq(AiConversation::getUserId, userId)
                         .eq(AiConversation::getConversationId, conversationId));
+    }
+
+    /**
+     * 查询用户最近一份已审查合同的摘要（标题 + 风险统计），供前端展示"已关联合同"标识；
+     * 无已审查合同或查询失败返回 null。
+     */
+    @Override
+    public Map<String, Object> getContractContext(Long userId) {
+        if (contractMapper == null || reviewRecordMapper == null || userId == null) {
+            return null;
+        }
+        try {
+            Contract contract = findLatestReviewedContract(userId);
+            if (contract == null) {
+                return null;
+            }
+            List<ReviewRecord> records = reviewRecordMapper.selectList(
+                    new LambdaQueryWrapper<ReviewRecord>()
+                            .eq(ReviewRecord::getContractId, contract.getId()));
+            long highCount = records.stream()
+                    .filter(r -> levelWeight(r.getRiskLevel()) == 0).count();
+            long mediumCount = records.stream()
+                    .filter(r -> levelWeight(r.getRiskLevel()) == 1).count();
+            Map<String, Object> context = new HashMap<>();
+            context.put("contractId", contract.getId());
+            context.put("title", contract.getTitle());
+            context.put("riskCount", records.size());
+            context.put("highCount", highCount);
+            context.put("mediumCount", mediumCount);
+            return context;
+        } catch (Exception e) {
+            log.warn("查询合同上下文失败", e);
+            return null;
+        }
     }
 
     @Override
@@ -506,7 +621,8 @@ public class DeepSeekServiceImpl implements DeepSeekService {
 
             // 与同步 chat 相同的会话组装：RAG 条文注入 + 最近10条历史
             List<Map<String, String>> messages = new ArrayList<>();
-            messages.add(Map.of("role", "system", "content", buildRagSystemPrompt(question)));
+            messages.add(Map.of("role", "system", "content",
+                    buildRagSystemPrompt(question) + buildContractContext(userId)));
             messages.addAll(loadHistory(userId, finalConversationId));
             messages.add(Map.of("role", "user", "content", question));
 

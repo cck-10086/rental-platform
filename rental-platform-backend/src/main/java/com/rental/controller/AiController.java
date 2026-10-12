@@ -105,4 +105,12 @@ public class AiController {
         deepSeekService.deleteConversation(conversationId, SecurityUtil.getCurrentUserId());
         return Result.success();
     }
+
+    /**
+     * 用户最近一份已审查合同摘要，供前端展示"已关联合同"标识；无已审查合同 data 为 null。
+     */
+    @GetMapping("/contract-context")
+    public Result<Map<String, Object>> contractContext() {
+        return Result.success(deepSeekService.getContractContext(SecurityUtil.getCurrentUserId()));
+    }
 }

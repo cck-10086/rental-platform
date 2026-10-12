@@ -3,6 +3,7 @@ export const aiChat = (data) => request.post('/ai/chat', data)
 export const getConversations = () => request.get('/ai/conversations')
 export const getConversationDetail = (id) => request.get(`/ai/conversations/${id}`)
 export const deleteConversation = (id) => request.delete(`/ai/conversations/${id}`)
+export const getContractContext = () => request.get('/ai/contract-context')
 
 /**
  * 流式对话（SSE）：POST /ai/chat/stream，用 fetch + ReadableStream 逐段读取。

@@ -26,4 +26,10 @@ public interface DeepSeekService {
     List<Map<String, Object>> listConversations(Long userId);
     List<Map<String, Object>> getConversationMessages(String conversationId, Long userId);
     void deleteConversation(String conversationId, Long userId);
+
+    /**
+     * 查询用户最近一份已审查合同的上下文摘要（标题 + 风险统计），供前端展示"已关联合同"标识；
+     * 无已审查合同返回 null。
+     */
+    Map<String, Object> getContractContext(Long userId);
 }

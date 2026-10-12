@@ -2,7 +2,11 @@ package com.rental.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rental.config.DeepSeekConfig;
+import com.rental.entity.Contract;
+import com.rental.entity.ReviewRecord;
 import com.rental.mapper.AiConversationMapper;
+import com.rental.mapper.ContractMapper;
+import com.rental.mapper.ReviewRecordMapper;
 import com.rental.service.LegalKnowledgeService;
 import com.sun.net.httpserver.HttpServer;
 import dev.langchain4j.data.document.Metadata;
@@ -129,6 +133,62 @@ class DeepSeekServiceImplTest {
             String body = capturedBodies.get(0);
             assertTrue(body.contains("维修义务"), "system prompt 应注入检索到的法律条文");
             assertTrue(body.contains("依据：《法律名称》第X条"), "应要求模型在回答末尾列明引用条文");
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
+    void chatInjectsContractContextIntoSystemPrompt() throws Exception {
+        // mock 最近已审查合同与风险记录，验证 Top 风险摘要被注入聊天 system prompt
+        List<String> capturedBodies = new ArrayList<>();
+        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+        server.createContext("/chat/completions", exchange -> {
+            capturedBodies.add(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+            byte[] resp = "{\"choices\":[{\"message\":{\"content\":\"回答内容\"}}]}"
+                    .getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, resp.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(resp);
+            }
+        });
+        server.start();
+        try {
+            DeepSeekServiceImpl chatService = new DeepSeekServiceImpl();
+            DeepSeekConfig config = new DeepSeekConfig();
+            config.setApiKey("test-key");
+            config.setBaseUrl("http://localhost:" + server.getAddress().getPort());
+            config.setModel("test-model");
+            ReflectionTestUtils.setField(chatService, "deepSeekConfig", config);
+            ReflectionTestUtils.setField(chatService, "okHttpClient", new OkHttpClient());
+
+            AiConversationMapper mapper = Mockito.mock(AiConversationMapper.class);
+            Mockito.when(mapper.selectList(any())).thenReturn(List.of());
+            ReflectionTestUtils.setField(chatService, "aiConversationMapper", mapper);
+
+            ContractMapper contractMapper = Mockito.mock(ContractMapper.class);
+            Contract contract = new Contract();
+            contract.setId(9L);
+            contract.setTitle("承租合同");
+            contract.setStatus("completed");
+            Mockito.when(contractMapper.selectOne(any())).thenReturn(contract);
+            ReflectionTestUtils.setField(chatService, "contractMapper", contractMapper);
+
+            ReviewRecordMapper reviewRecordMapper = Mockito.mock(ReviewRecordMapper.class);
+            ReviewRecord record = new ReviewRecord();
+            // 入库的 riskLevel 为中文（convertRiskLevel 转换），用中文守护等级匹配逻辑
+            record.setRiskLevel("高风险");
+            record.setRiskType("违约金过高");
+            record.setRiskExplanation("日违约金达月租金10%");
+            Mockito.when(reviewRecordMapper.selectList(any())).thenReturn(List.of(record));
+            ReflectionTestUtils.setField(chatService, "reviewRecordMapper", reviewRecordMapper);
+
+            Map<String, String> result = chatService.chat("我上传的合同有什么风险", "", 1L);
+            assertEquals("回答内容", result.get("answer"));
+            String body = capturedBodies.get(0);
+            assertTrue(body.contains("承租合同"), "system prompt 应注入最近已审查合同的标题");
+            assertTrue(body.contains("违约金过高"), "system prompt 应注入合同风险摘要");
         } finally {
             server.stop(0);
         }
