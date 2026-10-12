@@ -441,6 +441,8 @@ public class ContractServiceImpl implements ContractService {
      */
     private float drawLine(PDPageContentStream cs, PDFont font, float size, String text,
                            float x, float y, boolean wrap) throws IOException {
+        // PDF 中文字体无法编码换行/制表符等控制字符（No glyph for U+000A），统一替换为空格
+        text = text == null ? "-" : text.replaceAll("[\\r\\n\\t\\f\\u000B]", " ");
         float lineHeight = size + 7;
         cs.beginText();
         cs.setFont(font, size);
