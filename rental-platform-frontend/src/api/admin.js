@@ -15,3 +15,7 @@ export const getAdminMoveOuts = (params) => request.get('/admin/move-outs', { pa
 
 // 数据统计
 export const getAdminStats = () => request.get('/admin/stats')
+
+// 风险偏好配置（宽松/标准/严格）
+export const getRiskConfig = () => request.get('/admin/risk-config')
+export const updateRiskConfig = (preference) => request.put('/admin/risk-config', { preference })

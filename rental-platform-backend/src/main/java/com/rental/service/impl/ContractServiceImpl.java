@@ -5,12 +5,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.rental.common.SecurityUtil;
 import com.rental.common.PageResult;
 import com.rental.config.MinioConfig;
+import com.rental.engine.RiskRuleEngine;
 import com.rental.entity.Contract;
 import com.rental.entity.ReviewRecord;
 import com.rental.mapper.ContractMapper;
 import com.rental.mapper.ReviewRecordMapper;
 import com.rental.service.ContractService;
 import com.rental.service.DeepSeekService;
+import com.rental.service.RiskConfigService;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -55,6 +57,12 @@ public class ContractServiceImpl implements ContractService {
 
     @Autowired
     private DeepSeekService deepSeekService;
+
+    @Autowired
+    private RiskRuleEngine riskRuleEngine;
+
+    @Autowired
+    private RiskConfigService riskConfigService;
 
     @Override
     public Contract upload(MultipartFile file, String title) {
@@ -124,6 +132,10 @@ public class ContractServiceImpl implements ContractService {
         Map<String, Object> reviewResult = deepSeekService.reviewContract(contractContent);
         List<Map<String, Object>> records = (List<Map<String, Object>>) reviewResult.get("records");
 
+        // 规则引擎二次校验：按锚点口径修正定量条款定级，并标记修正来源
+        records = riskRuleEngine.enforce(records, contractContent, riskConfigService.getPreference());
+        reviewResult.put("records", records);
+
         if (records == null || records.isEmpty()) {
             // 没有发现风险点
             contract.setStatus("completed");
@@ -169,6 +181,10 @@ public class ContractServiceImpl implements ContractService {
                 isHighRisk = "high".equalsIgnoreCase(riskLevel);
             }
             record.setIsHighRisk(isHighRisk ? 1 : 0);
+
+            // 规则引擎修正信息（未被修正的记录该两字段为 null）
+            record.setCorrectedBy((String) item.get("correctedBy"));
+            record.setRuleReason((String) item.get("ruleReason"));
 
             reviewRecordMapper.insert(record);
 

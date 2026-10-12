@@ -61,10 +61,21 @@ CREATE TABLE IF NOT EXISTS `review_record` (
     `risk_explanation` TEXT COMMENT '风险解读(大白话)',
     `suggestion` TEXT COMMENT '建议',
     `is_high_risk` TINYINT NOT NULL DEFAULT 0 COMMENT '是否高风险: 0否 1是',
+    `corrected_by` VARCHAR(32) DEFAULT NULL COMMENT '定级修正来源: rule_engine-规则引擎修正',
+    `rule_reason` VARCHAR(255) DEFAULT NULL COMMENT '规则引擎修正原因',
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     KEY `idx_contract_id` (`contract_id`),
     KEY `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='审查记录表';
+
+-- ========================
+-- 风险偏好配置表（全局单行）
+-- ========================
+CREATE TABLE IF NOT EXISTS `risk_config` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '配置ID',
+    `preference` VARCHAR(16) NOT NULL DEFAULT 'standard' COMMENT '风险偏好: lenient-宽松/standard-标准/strict-严格',
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='风险偏好配置表';
 
 -- ========================
 -- 房源表

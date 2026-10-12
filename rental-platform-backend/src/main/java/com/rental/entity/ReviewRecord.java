@@ -22,6 +22,10 @@ public class ReviewRecord {    public Long getId() { return this.id; }
     public void setSuggestion(String suggestion) { this.suggestion = suggestion; }
     public Integer getIsHighRisk() { return this.isHighRisk; }
     public void setIsHighRisk(Integer isHighRisk) { this.isHighRisk = isHighRisk; }
+    public String getCorrectedBy() { return this.correctedBy; }
+    public void setCorrectedBy(String correctedBy) { this.correctedBy = correctedBy; }
+    public String getRuleReason() { return this.ruleReason; }
+    public void setRuleReason(String ruleReason) { this.ruleReason = ruleReason; }
     public LocalDateTime getCreatedAt() { return this.createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
@@ -43,6 +47,12 @@ public class ReviewRecord {    public Long getId() { return this.id; }
     private String suggestion;
 
     private Integer isHighRisk = 0;
+
+    /** 定级修正来源：rule_engine 表示由规则引擎修正 */
+    private String correctedBy;
+
+    /** 规则引擎修正原因说明 */
+    private String ruleReason;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;

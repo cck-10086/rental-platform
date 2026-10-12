@@ -17,15 +17,36 @@
       </template>
       <p>此处为平台整体数据统计，仅管理员可见。高风险合同指 AI 审查后风险等级为“高风险”的合同；本月费用为当前自然月内新增费用记录的金额合计。</p>
     </el-card>
+
+    <!-- 审查风险偏好设置:仅影响新审查,已生成报告不追溯 -->
+    <el-card shadow="never" class="tip-card">
+      <template #header>
+        <span class="card-title">审查风险偏好</span>
+      </template>
+      <el-radio-group v-model="riskPreference" :disabled="savingPreference" @change="handlePreferenceChange">
+        <el-radio-button value="lenient">宽松</el-radio-button>
+        <el-radio-button value="standard">标准</el-radio-button>
+        <el-radio-button value="strict">严格</el-radio-button>
+      </el-radio-group>
+      <p class="pref-tip">
+        控制规则引擎对违约金日利率与押金月数的定级阈值：宽松档倾向减少高风险提示，严格档倾向提前预警。
+        切换后仅对新的合同审查生效，已生成的审查报告不受影响。
+      </p>
+    </el-card>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import { User, FileText, FileSearch, ShieldCheck, House, Wrench, Receipt } from '@lucide/vue'
-import { getAdminStats } from '@/api/admin'
+import { getAdminStats, getRiskConfig, updateRiskConfig } from '@/api/admin'
 
 const stats = ref({})
+
+// 风险偏好: lenient-宽松 / standard-标准 / strict-严格
+const riskPreference = ref('standard')
+const savingPreference = ref(false)
 
 // 扁平数据行:仅高风险使用语义红,其余中性图标
 const cards = computed(() => [
@@ -47,7 +68,32 @@ const fetchStats = async () => {
   }
 }
 
-onMounted(fetchStats)
+const fetchRiskConfig = async () => {
+  try {
+    const res = await getRiskConfig()
+    riskPreference.value = res.data?.preference || 'standard'
+  } catch {
+    // 错误已在拦截器中处理
+  }
+}
+
+const handlePreferenceChange = async (value) => {
+  savingPreference.value = true
+  try {
+    await updateRiskConfig(value)
+    ElMessage.success('风险偏好已更新，新审查将按新阈值执行')
+  } catch {
+    // 失败时回退为服务端当前值
+    await fetchRiskConfig()
+  } finally {
+    savingPreference.value = false
+  }
+}
+
+onMounted(() => {
+  fetchStats()
+  fetchRiskConfig()
+})
 </script>
 
 <style scoped>
@@ -109,6 +155,10 @@ onMounted(fetchStats)
   line-height: 1.8;
   margin: 0;
   font-size: 13px;
+}
+
+.pref-tip {
+  margin-top: 10px;
 }
 
 @media (max-width: 1023px) {

@@ -7,6 +7,7 @@ import com.rental.dto.UpdateUserRoleDTO;
 import com.rental.dto.UpdateUserStatusDTO;
 import com.rental.entity.User;
 import com.rental.service.AdminService;
+import com.rental.service.RiskConfigService;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -23,8 +24,11 @@ public class AdminController {
 
     private final AdminService adminService;
 
-    public AdminController(AdminService adminService) {
+    private final RiskConfigService riskConfigService;
+
+    public AdminController(AdminService adminService, RiskConfigService riskConfigService) {
         this.adminService = adminService;
+        this.riskConfigService = riskConfigService;
     }
 
     @GetMapping("/users")
@@ -96,5 +100,18 @@ public class AdminController {
     @GetMapping("/stats")
     public Result<Map<String, Object>> stats() {
         return Result.success(adminService.stats());
+    }
+
+    /** 获取当前风险偏好档位：lenient-宽松 / standard-标准 / strict-严格 */
+    @GetMapping("/risk-config")
+    public Result<Map<String, Object>> getRiskConfig() {
+        return Result.success(Map.of("preference", riskConfigService.getPreference()));
+    }
+
+    /** 更新风险偏好档位，切换后对新审查立即生效 */
+    @PutMapping("/risk-config")
+    public Result<?> updateRiskConfig(@RequestBody Map<String, String> body) {
+        riskConfigService.updatePreference(body.get("preference"));
+        return Result.success();
     }
 }
