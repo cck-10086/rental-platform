@@ -30,7 +30,7 @@
 
       <!-- 用户列表 -->
       <el-skeleton v-if="loading && users.length === 0" :rows="6" animated />
-      <el-table v-else :data="users" stripe v-loading="loading" style="width: 100%">
+      <el-table v-else class="rp-desktop-table" :data="users" stripe v-loading="loading" style="width: 100%">
         <el-table-column prop="id" label="ID" width="70" />
         <el-table-column prop="username" label="用户名" min-width="120" show-overflow-tooltip />
         <el-table-column prop="nickname" label="昵称" min-width="120" show-overflow-tooltip />
@@ -68,11 +68,39 @@
               {{ row.status === 1 ? '禁用' : '启用' }}
             </el-button>
             <el-button type="primary" link size="small" @click="openResetPassword(row)">
-              <el-icon><Key /></el-icon> 重置密码
+              <el-icon><KeyRound /></el-icon> 重置密码
             </el-button>
           </template>
         </el-table-column>
       </el-table>
+
+      <div v-if="!loading" class="rp-mobile-list">
+        <article v-for="user in users" :key="user.id" class="rp-mobile-card">
+          <div class="rp-mobile-card__header">
+            <h3 class="rp-mobile-card__title">{{ user.nickname || user.username }}</h3>
+            <el-tag :type="user.status === 1 ? 'success' : 'danger'" size="small">{{ user.status === 1 ? '正常' : '禁用' }}</el-tag>
+          </div>
+          <div class="rp-mobile-card__meta">
+            <span>@{{ user.username }}</span><span>{{ user.phone || '未填写手机号' }}</span><span>{{ user.createdAt || '-' }}</span>
+          </div>
+          <el-select
+            class="mobile-role-select"
+            :model-value="user.role"
+            size="small"
+            :disabled="user.id === currentUserId"
+            aria-label="用户角色"
+            @change="value => handleRoleChange(user, value)"
+          >
+            <el-option label="管理员" value="admin" />
+            <el-option label="普通用户" value="user" />
+          </el-select>
+          <div class="rp-mobile-card__footer">
+            <el-button v-if="user.id !== currentUserId" link :type="user.status === 1 ? 'warning' : 'success'" @click="handleToggleStatus(user)">{{ user.status === 1 ? '禁用' : '启用' }}</el-button>
+            <el-button link type="primary" @click="openResetPassword(user)">重置密码</el-button>
+          </div>
+        </article>
+        <el-empty v-if="users.length === 0" description="暂无符合条件的用户" :image-size="72" />
+      </div>
 
       <!-- 分页 -->
       <div class="pagination-wrapper">
@@ -110,7 +138,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Key } from '@element-plus/icons-vue'
+import { Search, KeyRound } from '@lucide/vue'
 import { getAdminUsers, updateUserStatus, updateUserRole, resetUserPassword } from '@/api/admin'
 import { useUserStore } from '@/store/user'
 
@@ -241,4 +269,6 @@ onMounted(fetchUsers)
   justify-content: flex-end;
   margin-top: 20px;
 }
+
+.mobile-role-select { width: 100%; margin-top: 14px; }
 </style>

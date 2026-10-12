@@ -1,63 +1,57 @@
 <template>
   <div class="register-container">
-    <el-card class="register-card" shadow="never">
-      <div class="register-logo">
-        <el-icon :size="20" color="#ffffff"><House /></el-icon>
+    <main class="auth-card">
+      <div class="auth-brand">
+        <span class="auth-brand__mark"><el-icon><House /></el-icon></span>
+        <span class="auth-brand__name">租住智审</span>
       </div>
-      <h1 class="register-title">智能租房合同审查平台</h1>
-      <p class="register-subtitle">创建您的账户</p>
-      <el-form ref="formRef" :model="form" :rules="rules" size="large" status-icon>
-        <el-form-item prop="username">
+
+      <header class="auth-heading">
+        <h1>智能租房合同审查平台</h1>
+        <p>创建账户，开始管理合同、房源与租住记录</p>
+      </header>
+
+      <el-form ref="formRef" :model="form" :rules="rules" size="large" label-position="top" status-icon>
+        <el-form-item label="用户名" prop="username">
           <el-input v-model="form.username" placeholder="用户名" :prefix-icon="User" />
         </el-form-item>
-        <el-form-item prop="nickname">
-          <el-input v-model="form.nickname" placeholder="昵称" :prefix-icon="UserFilled" />
+        <el-form-item label="昵称" prop="nickname">
+          <el-input v-model="form.nickname" placeholder="昵称" :prefix-icon="CircleUser" />
         </el-form-item>
-        <el-form-item prop="password">
-          <el-input v-model="form.password" type="password" placeholder="密码" :prefix-icon="Lock" show-password />
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="form.password" type="password" placeholder="至少 6 位密码" :prefix-icon="Lock" show-password />
         </el-form-item>
-        <el-form-item prop="confirmPassword">
-          <el-input v-model="form.confirmPassword" type="password" placeholder="确认密码" :prefix-icon="Lock" show-password />
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input v-model="form.confirmPassword" type="password" placeholder="再次输入密码" :prefix-icon="Lock" show-password />
         </el-form-item>
-        <el-form-item prop="phone">
-          <el-input v-model="form.phone" placeholder="手机号" :prefix-icon="Phone" />
+        <el-form-item label="手机号" prop="phone">
+          <el-input v-model="form.phone" placeholder="用于账号联系" :prefix-icon="Phone" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" class="register-btn" :loading="loading" @click="handleRegister">注 册</el-button>
+          <el-button type="primary" class="register-btn" :loading="loading" @click="handleRegister">创建账户</el-button>
         </el-form-item>
       </el-form>
-      <div class="register-footer">
-        已有账号？<router-link to="/login" class="link">立即登录</router-link>
-      </div>
-    </el-card>
+
+      <div class="register-footer">已有账号？<router-link to="/login" class="link">返回登录</router-link></div>
+    </main>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { User, UserFilled, Lock, Phone, House } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { CircleUser, House, Lock, Phone, User } from '@lucide/vue'
 import { register } from '@/api/user'
 
 const router = useRouter()
 const formRef = ref(null)
 const loading = ref(false)
+const form = reactive({ username: '', nickname: '', password: '', confirmPassword: '', phone: '' })
 
-const form = reactive({
-  username: '',
-  nickname: '',
-  password: '',
-  confirmPassword: '',
-  phone: ''
-})
-
-const validateConfirmPassword = (rule, value, callback) => {
-  if (value !== form.password) {
-    callback(new Error('两次密码输入不一致'))
-  } else {
-    callback()
-  }
+const validateConfirmPassword = (_rule, value, callback) => {
+  if (value !== form.password) callback(new Error('两次密码输入不一致'))
+  else callback()
 }
 
 const rules = {
@@ -82,16 +76,11 @@ const handleRegister = async () => {
   if (!valid) return
   loading.value = true
   try {
-    await register({
-      username: form.username,
-      nickname: form.nickname,
-      password: form.password,
-      phone: form.phone
-    })
+    await register({ username: form.username, nickname: form.nickname, password: form.password, phone: form.phone })
     ElMessage.success('注册成功，请登录')
     router.push('/login')
   } catch {
-    // 错误已在拦截器中处理
+    // 错误已在请求拦截器中处理
   } finally {
     loading.value = false
   }
@@ -99,77 +88,69 @@ const handleRegister = async () => {
 </script>
 
 <style scoped>
+/* 单列窄表单:与登录页同构,轻边框、小圆角、无装饰 */
 .register-container {
-  min-height: 100vh;
   display: flex;
+  min-height: 100dvh;
   align-items: center;
   justify-content: center;
-  background: #F6F8FC;
-  /* 三团主色系柔光,与登录页同一套视觉 */
-  background-image:
-    radial-gradient(900px circle at 12% 18%, rgba(37, 99, 235, 0.16), transparent 55%),
-    radial-gradient(700px circle at 88% 82%, rgba(37, 99, 235, 0.12), transparent 55%),
-    radial-gradient(560px circle at 82% 10%, rgba(14, 165, 233, 0.12), transparent 60%);
-  background-attachment: fixed;
-  padding: 24px;
+  padding: 32px 20px calc(32px + env(safe-area-inset-bottom));
+  background: var(--rp-bg);
 }
-.register-card {
-  width: 420px;
-  border-radius: 18px;
-  padding: 20px 16px;
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow:
-    0 24px 48px -20px rgba(37, 99, 235, 0.28),
-    0 2px 6px rgba(15, 23, 42, 0.04);
-  animation: register-card-in 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+
+.auth-card {
+  width: min(100%, 400px);
+  padding: 32px;
+  border: 1px solid var(--rp-border);
+  border-radius: var(--rp-radius-card);
+  background: var(--rp-surface);
+  animation: auth-in .25s var(--rp-ease);
 }
-@keyframes register-card-in {
-  from { opacity: 0; transform: translateY(14px) scale(0.985); }
-  to { opacity: 1; transform: none; }
-}
-.register-logo {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #3B82F6, #2563EB);
+
+.auth-brand {
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin: 6px auto 16px;
-  box-shadow: 0 10px 22px -8px rgba(37, 99, 235, 0.55);
+  gap: 9px;
+  margin-bottom: 24px;
 }
-.register-title {
-  text-align: center;
-  font-size: 21px;
-  color: #0F172A;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  margin-bottom: 8px;
+.auth-brand__mark {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--rp-border);
+  border-radius: var(--rp-radius-btn);
+  background: var(--rp-surface-muted);
+  color: var(--rp-primary);
+  font-size: 15px;
 }
-.register-subtitle {
-  text-align: center;
-  color: #64748B;
-  margin-bottom: 30px;
-  font-size: 13px;
+.auth-brand__name { color: var(--rp-text-secondary); font-size: 13px; font-weight: 600; }
+
+.auth-heading { margin-bottom: 20px; }
+.auth-heading h1 {
+  margin: 0;
+  color: var(--rp-text);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
 }
-.register-btn {
-  width: 100%;
-  border-radius: 10px;
-}
-.register-footer {
-  text-align: center;
-  font-size: 13px;
-  color: #64748B;
-}
-.link {
-  color: #2563EB;
-  text-decoration: none;
-  font-weight: 500;
-}
-.link:hover {
-  text-decoration: underline;
+.auth-heading p { margin: 6px 0 0; color: var(--rp-text-muted); font-size: 13px; line-height: 1.5; }
+
+.auth-card :deep(.el-form-item) { margin-bottom: 16px; }
+.auth-card :deep(.el-form-item__label) { margin-bottom: 6px; line-height: 1.3; }
+.auth-card :deep(.el-input__wrapper) { min-height: 38px; }
+.auth-card :deep(.el-form-item:last-child) { margin-top: 6px; margin-bottom: 0; }
+
+.register-btn { width: 100%; min-height: 38px; justify-content: center; }
+
+.register-footer { margin-top: 18px; color: var(--rp-text-muted); font-size: 13px; text-align: center; }
+.link { color: var(--rp-primary); font-weight: 500; text-decoration: none; }
+.link:hover { text-decoration: underline; }
+
+@keyframes auth-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 480px) {
+  .auth-card { padding: 24px 20px; border: 0; background: transparent; }
 }
 </style>

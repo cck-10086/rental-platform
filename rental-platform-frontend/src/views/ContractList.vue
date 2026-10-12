@@ -32,6 +32,7 @@
       <el-skeleton v-if="loading && contracts.length === 0" :rows="6" animated />
       <el-table
         v-else
+        class="rp-desktop-table"
         :data="contracts"
         stripe
         v-loading="loading"
@@ -42,25 +43,21 @@
         <el-table-column prop="createdAt" label="上传时间" width="170" />
         <el-table-column label="风险等级" width="100">
           <template #default="{ row }">
-            <el-tag :type="riskLevelType(row.riskLevel)" size="small">
-              {{ riskLevelLabel(row.riskLevel) }}
-            </el-tag>
+            <StatusTag :status="riskLevelType(row.riskLevel)" :label="riskLevelLabel(row.riskLevel)" />
           </template>
         </el-table-column>
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="statusType(row.status)" size="small">
-              {{ statusLabel(row.status) }}
-            </el-tag>
+            <StatusTag :status="statusType(row.status)" :label="statusLabel(row.status)" />
           </template>
         </el-table-column>
         <el-table-column label="操作" width="240" fixed="right">
           <template #default="{ row }">
             <el-button type="info" link size="small" @click="handleViewFile(row)">
-              <el-icon><View /></el-icon> 查看文件
+              <el-icon><Eye /></el-icon> 查看文件
             </el-button>
             <el-button type="primary" link size="small" @click="handleView(row)">
-              <el-icon><View /></el-icon> 查看详情
+              <el-icon><Eye /></el-icon> 查看详情
             </el-button>
             <el-popconfirm
               title="确定要删除这份合同吗？"
@@ -70,13 +67,35 @@
             >
               <template #reference>
                 <el-button type="danger" link size="small">
-                  <el-icon><Delete /></el-icon> 删除
+                  <el-icon><Trash2 /></el-icon> 删除
                 </el-button>
               </template>
             </el-popconfirm>
           </template>
         </el-table-column>
       </el-table>
+
+      <div v-if="!loading" class="rp-mobile-list">
+        <article v-for="contract in contracts" :key="contract.id" class="rp-mobile-card">
+          <div class="rp-mobile-card__header">
+            <h3 class="rp-mobile-card__title">{{ contract.title }}</h3>
+            <StatusTag :status="riskLevelType(contract.riskLevel)" :label="riskLevelLabel(contract.riskLevel)" />
+          </div>
+          <div class="rp-mobile-card__meta">
+            <span>{{ contract.fileName || '未命名文件' }}</span>
+            <span>{{ contract.createdAt || '-' }}</span>
+            <StatusTag :status="statusType(contract.status)" :label="statusLabel(contract.status)" />
+          </div>
+          <div class="rp-mobile-card__footer">
+            <el-button link type="info" @click="handleViewFile(contract)"><el-icon><Eye /></el-icon>文件</el-button>
+            <el-button link type="primary" @click="handleView(contract)"><el-icon><Eye /></el-icon>报告</el-button>
+            <el-popconfirm title="确定要删除这份合同吗？" confirm-button-text="确认" cancel-button-text="取消" @confirm="handleDelete(contract)">
+              <template #reference><el-button link type="danger"><el-icon><Trash2 /></el-icon>删除</el-button></template>
+            </el-popconfirm>
+          </div>
+        </article>
+        <el-empty v-if="contracts.length === 0" description="暂无符合条件的合同" :image-size="72" />
+      </div>
 
       <!-- 分页 -->
       <div class="pagination-wrapper">
@@ -99,7 +118,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Search, View, Delete } from '@element-plus/icons-vue'
+import { Search, Eye, Trash2 } from '@lucide/vue'
+import StatusTag from '@/components/StatusTag.vue'
 import { getContractList, deleteContract } from '@/api/contract'
 import request from '@/api/request'
 

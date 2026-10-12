@@ -17,7 +17,7 @@
 
       <template v-else>
       <!-- 房源列表 -->
-      <el-table :data="houseList" stripe v-loading="loading" style="width: 100%">
+      <el-table class="rp-desktop-table" :data="houseList" stripe v-loading="loading" style="width: 100%">
         <el-table-column prop="title" label="标题" min-width="180" show-overflow-tooltip />
         <el-table-column prop="address" label="地址" min-width="200" show-overflow-tooltip />
         <el-table-column prop="rentPrice" label="月租金(元)" width="110" />
@@ -33,7 +33,7 @@
         <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link size="small" @click="handleEdit(row)">
-              <el-icon><Edit /></el-icon> 编辑
+              <el-icon><Pencil /></el-icon> 编辑
             </el-button>
             <el-popconfirm
               title="确定要删除这套房源吗？"
@@ -43,13 +43,35 @@
             >
               <template #reference>
                 <el-button type="danger" link size="small">
-                  <el-icon><Delete /></el-icon> 删除
+                  <el-icon><Trash2 /></el-icon> 删除
                 </el-button>
               </template>
             </el-popconfirm>
           </template>
         </el-table-column>
       </el-table>
+
+      <div class="rp-mobile-list">
+        <article v-for="house in houseList" :key="house.id" class="rp-mobile-card">
+          <div class="rp-mobile-card__header">
+            <h3 class="rp-mobile-card__title">{{ house.title }}</h3>
+            <el-tag :type="statusType(house.status)" size="small">{{ statusLabel(house.status) }}</el-tag>
+          </div>
+          <div class="rp-mobile-card__meta">
+            <span>{{ house.address || '地址待补充' }}</span>
+            <span>¥{{ house.rentPrice || 0 }}/月</span>
+            <span>{{ house.area || '-' }} m²</span>
+            <span>押金 ¥{{ house.deposit || 0 }}</span>
+          </div>
+          <div class="rp-mobile-card__footer">
+            <el-button link type="primary" @click="handleEdit(house)"><el-icon><Pencil /></el-icon>编辑</el-button>
+            <el-popconfirm title="确定要删除这套房源吗？" confirm-button-text="确认" cancel-button-text="取消" @confirm="handleDelete(house)">
+              <template #reference><el-button link type="danger"><el-icon><Trash2 /></el-icon>删除</el-button></template>
+            </el-popconfirm>
+          </div>
+        </article>
+        <el-empty v-if="houseList.length === 0" description="暂无房源，点击上方按钮添加第一套房源" :image-size="72" />
+      </div>
 
       <!-- 分页 -->
       <div class="pagination-wrapper">
@@ -124,7 +146,7 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Plus, Edit, Delete } from '@element-plus/icons-vue'
+import { Plus, Pencil, Trash2 } from '@lucide/vue'
 import { addHouse, updateHouse, getHouseList, deleteHouse } from '@/api/house'
 
 const loading = ref(false)

@@ -34,7 +34,7 @@
     <!-- 退出登录 -->
     <el-card class="logout-card" shadow="never">
       <el-button type="danger" @click="handleLogout">
-        <el-icon><SwitchButton /></el-icon> 退出登录
+        <el-icon><LogOut /></el-icon> 退出登录
       </el-button>
     </el-card>
   </div>
@@ -44,7 +44,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Check, SwitchButton } from '@element-plus/icons-vue'
+import { Check, LogOut } from '@lucide/vue'
 import { updateProfile, getUserInfo } from '@/api/user'
 import { useUserStore } from '@/store/user'
 
@@ -143,9 +143,9 @@ onMounted(() => {
 }
 
 .card-title {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 600;
-  color: #303133;
+  color: var(--rp-text);
 }
 
 .profile-form {

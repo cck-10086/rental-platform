@@ -17,7 +17,7 @@
 
       <template v-else>
       <!-- 费用列表 -->
-      <el-table :data="expenseList" stripe v-loading="loading" style="width: 100%">
+      <el-table class="rp-desktop-table" :data="expenseList" stripe v-loading="loading" style="width: 100%">
         <el-table-column label="费用类型" width="120">
           <template #default="{ row }">
             <el-tag :type="expenseTypeColor(row.expenseType)" size="small">
@@ -38,7 +38,7 @@
         <el-table-column label="操作" width="220" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link size="small" @click="handleEdit(row)">
-              <el-icon><Edit /></el-icon> 编辑
+              <el-icon><Pencil /></el-icon> 编辑
             </el-button>
             <el-button
               v-if="!row.isPaid"
@@ -57,13 +57,34 @@
             >
               <template #reference>
                 <el-button type="danger" link size="small">
-                  <el-icon><Delete /></el-icon> 删除
+                  <el-icon><Trash2 /></el-icon> 删除
                 </el-button>
               </template>
             </el-popconfirm>
           </template>
         </el-table-column>
       </el-table>
+
+      <div class="rp-mobile-list">
+        <article v-for="expense in expenseList" :key="expense.id" class="rp-mobile-card">
+          <div class="rp-mobile-card__header">
+            <h3 class="rp-mobile-card__title">{{ expense.expenseType }} · ¥{{ expense.amount }}</h3>
+            <el-tag :type="expense.isPaid ? 'success' : 'danger'" size="small">{{ expense.isPaid ? '已缴' : '未缴' }}</el-tag>
+          </div>
+          <div class="rp-mobile-card__meta">
+            <span>账单月份 {{ expense.billMonth || '-' }}</span>
+            <span>截止 {{ expense.dueDate || '-' }}</span>
+          </div>
+          <div class="rp-mobile-card__footer">
+            <el-button link type="primary" @click="handleEdit(expense)"><el-icon><Pencil /></el-icon>编辑</el-button>
+            <el-button v-if="!expense.isPaid" link type="success" @click="handleMarkPaid(expense)"><el-icon><Check /></el-icon>标记已缴</el-button>
+            <el-popconfirm title="确定要删除这笔费用吗？" confirm-button-text="确认" cancel-button-text="取消" @confirm="handleDelete(expense)">
+              <template #reference><el-button link type="danger"><el-icon><Trash2 /></el-icon>删除</el-button></template>
+            </el-popconfirm>
+          </div>
+        </article>
+        <el-empty v-if="expenseList.length === 0" description="暂无费用记录" :image-size="72" />
+      </div>
 
       <!-- 分页 -->
       <div class="pagination-wrapper">
@@ -142,7 +163,7 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Plus, Edit, Delete, Check } from '@element-plus/icons-vue'
+import { Plus, Pencil, Trash2, Check } from '@lucide/vue'
 import { addExpense, updateExpense, getExpenseList, markPaid, deleteExpense } from '@/api/expense'
 
 const loading = ref(false)

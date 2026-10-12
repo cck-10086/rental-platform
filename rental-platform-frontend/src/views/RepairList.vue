@@ -17,7 +17,7 @@
 
       <template v-else>
       <!-- 维修列表 -->
-      <el-table :data="repairList" stripe v-loading="loading" style="width: 100%">
+      <el-table class="rp-desktop-table" :data="repairList" stripe v-loading="loading" style="width: 100%">
         <el-table-column prop="title" label="标题" min-width="180" show-overflow-tooltip />
         <el-table-column label="紧急程度" width="100">
           <template #default="{ row }">
@@ -37,7 +37,7 @@
         <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link size="small" @click="handleEdit(row)">
-              <el-icon><Edit /></el-icon> 编辑
+              <el-icon><Pencil /></el-icon> 编辑
             </el-button>
             <el-popconfirm
               title="确定要删除这条维修记录吗？"
@@ -47,13 +47,33 @@
             >
               <template #reference>
                 <el-button type="danger" link size="small">
-                  <el-icon><Delete /></el-icon> 删除
+                  <el-icon><Trash2 /></el-icon> 删除
                 </el-button>
               </template>
             </el-popconfirm>
           </template>
         </el-table-column>
       </el-table>
+
+      <div class="rp-mobile-list">
+        <article v-for="repair in repairList" :key="repair.id" class="rp-mobile-card">
+          <div class="rp-mobile-card__header">
+            <h3 class="rp-mobile-card__title">{{ repair.title }}</h3>
+            <el-tag :type="urgencyType(repair.urgency)" size="small">{{ repair.urgency || '普通' }}</el-tag>
+          </div>
+          <div class="rp-mobile-card__meta">
+            <el-tag :type="statusType(repair.status)" size="small">{{ statusLabel(repair.status) }}</el-tag>
+            <span>{{ repair.createdAt || '-' }}</span>
+          </div>
+          <div class="rp-mobile-card__footer">
+            <el-button link type="primary" @click="handleEdit(repair)"><el-icon><Pencil /></el-icon>编辑</el-button>
+            <el-popconfirm title="确定要删除这条维修记录吗？" confirm-button-text="确认" cancel-button-text="取消" @confirm="handleDelete(repair)">
+              <template #reference><el-button link type="danger"><el-icon><Trash2 /></el-icon>删除</el-button></template>
+            </el-popconfirm>
+          </div>
+        </article>
+        <el-empty v-if="repairList.length === 0" description="暂无维修报备" :image-size="72" />
+      </div>
 
       <!-- 分页 -->
       <div class="pagination-wrapper">
@@ -121,7 +141,7 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Plus, Edit, Delete } from '@element-plus/icons-vue'
+import { Plus, Pencil, Trash2 } from '@lucide/vue'
 import { addRepair, updateRepair, getRepairList, deleteRepair } from '@/api/repair'
 
 const loading = ref(false)

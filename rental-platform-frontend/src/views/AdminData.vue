@@ -34,7 +34,7 @@
 
       <!-- 数据表格 -->
       <el-skeleton v-if="loading && rows.length === 0" :rows="6" animated />
-      <el-table v-else :data="rows" stripe v-loading="loading" style="width: 100%">
+      <el-table v-else class="rp-desktop-table" :data="rows" stripe v-loading="loading" style="width: 100%">
         <el-table-column
           v-for="col in columns"
           :key="col.prop"
@@ -48,6 +48,21 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <div v-if="!loading" class="rp-mobile-list">
+        <article v-for="(row, rowIndex) in rows" :key="row.id || rowIndex" class="rp-mobile-card">
+          <div class="rp-mobile-card__header">
+            <h3 class="rp-mobile-card__title">{{ row.title || row.username || `${activeTab} #${row.id || rowIndex + 1}` }}</h3>
+          </div>
+          <dl class="mobile-data-list">
+            <template v-for="column in columns.slice(0, 6)" :key="column.prop">
+              <dt>{{ column.label }}</dt>
+              <dd>{{ column.formatter ? column.formatter(row[column.prop], row) : (row[column.prop] ?? '-') }}</dd>
+            </template>
+          </dl>
+        </article>
+        <el-empty v-if="rows.length === 0" description="暂无符合条件的数据" :image-size="72" />
+      </div>
 
       <!-- 分页 -->
       <div class="pagination-wrapper">
@@ -68,7 +83,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { Search } from '@element-plus/icons-vue'
+import { Search } from '@lucide/vue'
 import {
   getAdminContracts, getAdminHouses, getAdminExpenses,
   getAdminRepairs, getAdminMoveOuts
@@ -254,4 +269,8 @@ onMounted(fetchData)
   justify-content: flex-end;
   margin-top: 20px;
 }
+
+.mobile-data-list { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 8px 12px; margin: 14px 0 0; font-size: 12px; }
+.mobile-data-list dt { color: var(--rp-text-muted); }
+.mobile-data-list dd { min-width: 0; margin: 0; overflow-wrap: anywhere; color: var(--rp-text-secondary); }
 </style>

@@ -66,8 +66,8 @@
         <div class="summary-progress">
           <el-progress
             :percentage="summary.highPercent"
-            :color="['#f56c6c', '#e6a23c', '#67c23a']"
-            :stroke-width="18"
+            :color="['#B42318', '#B54708', '#067647']"
+            :stroke-width="10"
           >
             <span class="progress-text">
               高风险占比 {{ summary.highPercent }}%
@@ -105,7 +105,7 @@
                 <el-tag
                   :type="riskLevelType(record.riskLevel)"
                   size="small"
-                  effect="dark"
+                  effect="light"
                 >
                   {{ riskLevelLabel(record.riskLevel) }}
                 </el-tag>
@@ -118,7 +118,7 @@
             <!-- 条款原文 -->
             <div class="clause-original">
             <div class="clause-section-label">
-                <el-icon><ChatLineSquare /></el-icon> 条款原文
+                <el-icon><MessageSquare /></el-icon> 条款原文
               </div>
               <div class="clause-original-text">
                 {{ record.clauseContent || '-' }}
@@ -135,7 +135,7 @@
               >
                 <template #title>
                   <div class="alert-title-wrapper">
-                    <el-icon class="alert-title-icon"><WarningFilled /></el-icon>
+                    <el-icon class="alert-title-icon"><TriangleAlert /></el-icon>
                     <span class="alert-title-text">大白话解读</span>
                   </div>
                   <div class="alert-content">{{ record.riskExplanation }}</div>
@@ -152,7 +152,7 @@
               >
                 <template #title>
                   <div class="alert-title-wrapper">
-                    <el-icon class="alert-title-icon"><InfoFilled /></el-icon>
+                    <el-icon class="alert-title-icon"><Info /></el-icon>
                     <span class="alert-title-text">修改建议</span>
                   </div>
                   <div class="alert-content">{{ record.suggestion }}</div>
@@ -165,13 +165,13 @@
 
       <!-- 底部操作 -->
       <div class="review-actions">
-        <el-button size="large" @click="handleDownloadFile">
+        <el-button @click="handleDownloadFile">
           <el-icon><Download /></el-icon> 下载原文件
         </el-button>
-        <el-button type="primary" size="large" :loading="exporting" @click="handleExport">
+        <el-button type="primary" :loading="exporting" @click="handleExport">
           <el-icon><Printer /></el-icon> 导出报告 PDF
         </el-button>
-        <el-button size="large" @click="$router.push('/contract/list')">
+        <el-button @click="$router.push('/contract/list')">
           <el-icon><ArrowLeft /></el-icon> 返回列表
         </el-button>
       </div>
@@ -184,8 +184,8 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
-  ChatLineSquare, WarningFilled, InfoFilled, Printer, ArrowLeft, Download
-} from '@element-plus/icons-vue'
+  MessageSquare, TriangleAlert, Info, Printer, ArrowLeft, Download
+} from '@lucide/vue'
 import { getContractDetail, getReviewRecords } from '@/api/contract'
 import request from '@/api/request'
 
@@ -322,14 +322,14 @@ onMounted(() => {
 }
 
 .card-title {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
-  color: #303133;
+  color: var(--rp-text);
 }
 
 .card-count {
-  font-size: 13px;
-  color: #909399;
+  font-size: 12px;
+  color: var(--rp-text-muted);
 }
 
 /* 合同基本信息 */
@@ -350,7 +350,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding: 8px 0 16px;
+  padding: 6px 0 14px;
 }
 
 .summary-item {
@@ -358,33 +358,35 @@ onMounted(() => {
   flex: 1;
 }
 
+/* 统计数字:24px 区间 */
 .summary-number {
-  font-size: 32px;
-  font-weight: 700;
+  font-size: 24px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
   line-height: 1.2;
 }
 
 .summary-label {
-  font-size: 14px;
-  color: #909399;
+  font-size: 12px;
+  color: var(--rp-text-muted);
   margin-top: 4px;
 }
 
-.summary-high .summary-number { color: #f56c6c; }
-.summary-medium .summary-number { color: #e6a23c; }
-.summary-low .summary-number { color: #67c23a; }
-.summary-total .summary-number { color: #303133; }
+.summary-high .summary-number { color: var(--rp-danger); }
+.summary-medium .summary-number { color: var(--rp-warning); }
+.summary-low .summary-number { color: var(--rp-success); }
+.summary-total .summary-number { color: var(--rp-text); }
 
 .summary-divider {
-  height: 48px;
+  height: 44px;
 }
 
 .summary-progress {
-  padding: 8px 0;
+  padding: 6px 0;
 }
 
 .progress-text {
-  font-size: 13px;
+  font-size: 12px;
 }
 
 /* 风险条款详情 */
@@ -395,43 +397,43 @@ onMounted(() => {
 .clause-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
 }
 
+/* 条款卡:白底 + 风险等级左侧细线,避免大面积色底 */
 .clause-item {
-  border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  padding: 20px;
-  transition: border-color 180ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid var(--rp-border);
+  border-radius: var(--rp-radius-card);
+  padding: 16px 18px;
+  background: var(--rp-surface);
+  transition: border-color var(--rp-duration) var(--rp-ease);
 }
 
 .clause-item.clause-high {
-  border-left: 3px solid #DC2626;
-  background: #FEF2F2;
+  border-left: 2px solid var(--rp-danger);
 }
 
 .clause-item.clause-medium {
-  border-left: 3px solid #D97706;
-  background: #FFFBEB;
+  border-left: 2px solid var(--rp-warning);
 }
 
 .clause-item.clause-low {
-  border-left: 3px solid #059669;
-  background: #ECFDF5;
+  border-left: 2px solid var(--rp-success);
 }
 
 .clause-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .clause-index {
-  font-size: 18px;
-  font-weight: 700;
-  color: #909399;
-  min-width: 36px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rp-text-muted);
+  min-width: 32px;
+  font-variant-numeric: tabular-nums;
 }
 
 .clause-tags {
@@ -441,34 +443,34 @@ onMounted(() => {
 
 /* 条款原文 */
 .clause-original {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .clause-section-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #606266;
-  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 550;
+  color: var(--rp-text-muted);
+  margin-bottom: 7px;
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
 .clause-original-text {
-  background: #F8FAFC;
-  border-radius: 8px;
-  padding: 12px 16px;
-  font-size: 14px;
+  background: var(--rp-surface-muted);
+  border-radius: var(--rp-radius-btn);
+  padding: 11px 14px;
+  font-size: 13px;
   line-height: 1.7;
-  color: #334155;
+  color: var(--rp-text-secondary);
   white-space: pre-wrap;
-  border-left: 3px solid #CBD5E1;
+  border-left: 2px solid #D6D3D1;
 }
 
 /* 解读和建议 */
 .clause-explanation,
 .clause-suggestion {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .alert-title-wrapper {
@@ -478,27 +480,43 @@ onMounted(() => {
 }
 
 .alert-title-icon {
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .alert-title-text {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .alert-content {
-  margin-top: 8px;
-  font-size: 14px;
+  margin-top: 7px;
+  font-size: 13px;
   line-height: 1.6;
-  color: #606266;
+  color: var(--rp-text-secondary);
 }
 
 /* 底部操作 */
 .review-actions {
   display: flex;
-  gap: 16px;
+  gap: 10px;
   justify-content: center;
-  padding: 16px 0 32px;
+  padding: 12px 0 28px;
+}
+
+@media (max-width: 767px) {
+  .review-content { gap: 14px; }
+  .card-header { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .summary-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; padding: 0; overflow: hidden; border: 1px solid var(--rp-divider); border-radius: var(--rp-radius-card); background: var(--rp-divider); }
+  .summary-item { padding: 16px 8px; background: var(--rp-surface); }
+  .summary-number { font-size: 26px; }
+  .summary-label { font-size: 11px; }
+  .summary-divider { display: none; }
+  .clause-list { gap: 14px; }
+  .clause-item { padding: 16px; }
+  .clause-header { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .clause-original-text { padding: 11px 12px; font-size: 13px; }
+  .review-actions { align-items: stretch; flex-direction: column; padding-bottom: 12px; }
+  .review-actions :deep(.el-button) { width: 100%; margin-left: 0; }
 }
 
 @media print {

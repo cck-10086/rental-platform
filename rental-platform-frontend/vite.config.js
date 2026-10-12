@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import path from 'path'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
@@ -12,9 +11,13 @@ export default defineConfig({
     AutoImport({ resolvers: [ElementPlusResolver()] }),
     Components({ resolvers: [ElementPlusResolver()] })
   ],
+  build: {
+    // 保留标准 backdrop-filter（毛玻璃）：默认 target 下 esbuild 会删标准属性只留 -webkit- 前缀
+    cssTarget: 'chrome90'
+  },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src')
+      '@': `${import.meta.dirname}/src`
     }
   },
   server: {

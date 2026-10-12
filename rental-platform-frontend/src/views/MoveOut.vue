@@ -17,7 +17,7 @@
 
       <template v-else>
       <!-- 退租列表 -->
-      <el-table :data="moveOutList" stripe v-loading="loading" style="width: 100%">
+      <el-table class="rp-desktop-table" :data="moveOutList" stripe v-loading="loading" style="width: 100%">
         <el-table-column label="合同信息" min-width="160">
           <template #default="{ row }">
             {{ row.contractId || '-' }}
@@ -41,7 +41,7 @@
         <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link size="small" @click="handleEdit(row)">
-              <el-icon><Edit /></el-icon> 编辑
+              <el-icon><Pencil /></el-icon> 编辑
             </el-button>
             <el-popconfirm
               title="确定要删除这条退租记录吗？"
@@ -51,13 +51,35 @@
             >
               <template #reference>
                 <el-button type="danger" link size="small">
-                  <el-icon><Delete /></el-icon> 删除
+                  <el-icon><Trash2 /></el-icon> 删除
                 </el-button>
               </template>
             </el-popconfirm>
           </template>
         </el-table-column>
       </el-table>
+
+      <div class="rp-mobile-list">
+        <article v-for="item in moveOutList" :key="item.id" class="rp-mobile-card">
+          <div class="rp-mobile-card__header">
+            <h3 class="rp-mobile-card__title">合同 {{ item.contractId || '-' }}</h3>
+            <el-tag :type="statusType(item.status)" size="small">{{ statusLabel(item.status) }}</el-tag>
+          </div>
+          <div class="rp-mobile-card__meta">
+            <span>退租 {{ item.moveOutDate || '-' }}</span>
+            <span>押金 ¥{{ item.totalDeposit || 0 }}</span>
+            <span>扣除 ¥{{ item.deductionAmount || 0 }}</span>
+            <strong>应退 ¥{{ calcRefund(item) }}</strong>
+          </div>
+          <div class="rp-mobile-card__footer">
+            <el-button link type="primary" @click="handleEdit(item)"><el-icon><Pencil /></el-icon>编辑</el-button>
+            <el-popconfirm title="确定要删除这条退租记录吗？" confirm-button-text="确认" cancel-button-text="取消" @confirm="handleDelete(item)">
+              <template #reference><el-button link type="danger"><el-icon><Trash2 /></el-icon>删除</el-button></template>
+            </el-popconfirm>
+          </div>
+        </article>
+        <el-empty v-if="moveOutList.length === 0" description="暂无退租记录" :image-size="72" />
+      </div>
 
       <!-- 分页 -->
       <div class="pagination-wrapper">
@@ -130,7 +152,7 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Plus, Edit, Delete } from '@element-plus/icons-vue'
+import { Plus, Pencil, Trash2 } from '@lucide/vue'
 import { createMoveOut, updateMoveOut, getMoveOutList, deleteMoveOut } from '@/api/moveOut'
 import { getContractList } from '@/api/contract'
 
