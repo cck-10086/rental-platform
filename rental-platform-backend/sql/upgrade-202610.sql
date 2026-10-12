@@ -35,3 +35,6 @@ CREATE TABLE IF NOT EXISTS review_feedback (
     UNIQUE KEY uk_record_user (record_id, user_id),
     KEY idx_record_id (record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='审查结果反馈表';
+
+-- 审查记录表：风险类型加宽（同条款多风险点合并输出时可能超过原 50 字，导致入库失败）
+ALTER TABLE review_record MODIFY COLUMN risk_type VARCHAR(255) DEFAULT NULL COMMENT '风险类型';

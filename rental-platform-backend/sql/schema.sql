@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS `review_record` (
     `contract_id` BIGINT NOT NULL COMMENT '合同ID',
     `user_id` BIGINT NOT NULL COMMENT '用户ID',
     `clause_content` TEXT COMMENT '条款原文',
-    `risk_type` VARCHAR(50) DEFAULT NULL COMMENT '风险类型',
+    `risk_type` VARCHAR(255) DEFAULT NULL COMMENT '风险类型',
     `risk_level` VARCHAR(20) DEFAULT NULL COMMENT '风险等级: 高风险/中风险/低风险',
     `risk_explanation` TEXT COMMENT '风险解读(大白话)',
     `suggestion` TEXT COMMENT '建议',

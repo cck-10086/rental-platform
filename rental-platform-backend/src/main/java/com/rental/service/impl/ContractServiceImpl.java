@@ -219,7 +219,10 @@ public class ContractServiceImpl implements ContractService {
             record.setContractId(contractId);
             record.setUserId(contract.getUserId());
             record.setClauseContent((String) item.get("clauseContent"));
-            record.setRiskType((String) item.get("riskType"));
+            // 风险类型列宽 255：同条款多风险点合并输出时可能超长，截断保护避免入库失败
+            String riskType = (String) item.get("riskType");
+            record.setRiskType(riskType != null && riskType.length() > 255
+                    ? riskType.substring(0, 255) : riskType);
 
             // 将英文风险等级转换为中文
             String riskLevel = (String) item.get("riskLevel");
