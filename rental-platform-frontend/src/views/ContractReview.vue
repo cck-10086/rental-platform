@@ -76,6 +76,26 @@
         </div>
       </el-card>
 
+      <!-- 审查入口：待审查或审查失败时展示，支持（重新）发起审查 -->
+      <el-card v-if="contract.status === 'pending' || contract.status === 'failed'" shadow="never" class="review-entry-card">
+        <div class="review-entry">
+          <div class="review-entry__text">
+            <template v-if="contract.status === 'pending'">
+              <span class="review-entry__title">该合同尚未审查</span>
+              <span class="review-entry__desc">审查由 AI 完成，通常需要几十秒，完成后将在此展示风险条款。</span>
+            </template>
+            <template v-else>
+              <span class="review-entry__title">上次审查未完成</span>
+              <span class="review-entry__desc">可能是网络或 AI 服务暂时不可用，可点击重新审查；多次失败时请检查网络后重试。</span>
+            </template>
+          </div>
+          <el-button type="primary" :loading="reviewing" @click="handleReview">
+            <el-icon><FileSearch /></el-icon>
+            {{ contract.status === 'failed' ? '重新审查' : '开始审查' }}
+          </el-button>
+        </div>
+      </el-card>
+
       <!-- 风险条款详情 -->
       <el-card class="clauses-card" shadow="never">
         <template #header>
@@ -184,9 +204,9 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
-  MessageSquare, TriangleAlert, Info, Printer, ArrowLeft, Download
+  MessageSquare, TriangleAlert, Info, Printer, ArrowLeft, Download, FileSearch
 } from '@lucide/vue'
-import { getContractDetail, getReviewRecords } from '@/api/contract'
+import { getContractDetail, getReviewRecords, reviewContract } from '@/api/contract'
 import request from '@/api/request'
 
 const route = useRoute()
@@ -200,8 +220,30 @@ const contract = reactive({
   title: '',
   fileName: '',
   createdAt: '',
-  riskLevel: ''
+  riskLevel: '',
+  status: ''
 })
+
+const reviewing = ref(false)
+
+// 发起/重新发起审查：AI 服务失败时后端返回 failed 状态与原因，此处给出明确提示
+const handleReview = async () => {
+  reviewing.value = true
+  try {
+    const res = await reviewContract(contractId.value)
+    const data = res.data
+    if (data?.status === 'failed') {
+      ElMessage.error(data.message || '审查服务暂时不可用，请稍后重试')
+    } else {
+      ElMessage.success('审查完成')
+    }
+    await fetchData()
+  } catch {
+    // 错误已在拦截器中处理
+  } finally {
+    reviewing.value = false
+  }
+}
 
 const records = ref([])
 
@@ -285,6 +327,7 @@ const fetchData = async () => {
     contract.fileName = detail.fileName || ''
     contract.createdAt = detail.createdAt || ''
     contract.riskLevel = detail.riskLevel || ''
+    contract.status = detail.status || ''
 
     records.value = recordsRes.data || []
   } catch {
@@ -496,6 +539,36 @@ onMounted(() => {
 }
 
 /* 底部操作 */
+/* 审查入口卡片 */
+.review-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.review-entry__text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.review-entry__title {
+  color: var(--rp-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.review-entry__desc {
+  color: var(--rp-text-secondary);
+  font-size: 13px;
+}
+
+@media (max-width: 767px) {
+  .review-entry { flex-direction: column; align-items: flex-start; }
+  .review-entry :deep(.el-button) { width: 100%; }
+}
+
 .review-actions {
   display: flex;
   gap: 10px;

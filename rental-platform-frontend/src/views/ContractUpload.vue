@@ -151,8 +151,13 @@ const handleUpload = async () => {
       if (event.total) uploadProgress.value = Math.min(99, Math.round((event.loaded / event.total) * 100))
     })
     uploadProgress.value = 100
-    ElMessage.success('合同上传成功，即将跳转到审查页面')
     const contractId = res.data?.id || res.data
+    if (res.data?.fromCache) {
+      // 命中审查缓存：同一文件已完成过审查，直接复用已有报告
+      ElMessage.success('检测到相同文件，已复用该文件的审查报告')
+    } else {
+      ElMessage.success('合同上传成功，即将跳转到审查页面')
+    }
     router.push(`/contract/review/${contractId}`)
   } catch {
     uploadError.value = '合同上传失败，请确认文件格式和网络状态后重试。'

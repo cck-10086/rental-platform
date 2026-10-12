@@ -1,9 +1,13 @@
 -- =====================================================
--- 增量升级脚本（2026-10）：规则引擎 + 风险偏好配置
+-- 增量升级脚本（2026-10）：规则引擎 + 风险偏好配置 + 审查缓存
 -- 适用于已按旧版 schema.sql 建库的环境，执行一次即可。
 -- 注意：库开启 ANSI_QUOTES 模式，字符串一律使用单引号。
 -- =====================================================
 USE rental_platform;
+
+-- 合同表：文件指纹（重复上传复用已有审查结果，不重复调用 AI）
+ALTER TABLE contract ADD COLUMN file_hash VARCHAR(64) DEFAULT NULL COMMENT '文件SHA-256指纹(重复上传复用审查结果)';
+ALTER TABLE contract ADD INDEX idx_file_hash (file_hash);
 
 -- 审查记录表：规则引擎修正标记（可空，向后兼容）
 ALTER TABLE review_record ADD COLUMN corrected_by VARCHAR(32) DEFAULT NULL COMMENT '定级修正来源: rule_engine-规则引擎修正';

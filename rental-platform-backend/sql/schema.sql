@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS `contract` (
     `file_path` VARCHAR(500) NOT NULL COMMENT 'MinIO存储路径',
     `file_type` VARCHAR(20) DEFAULT NULL COMMENT '文件类型: pdf/docx/txt',
     `content` LONGTEXT DEFAULT NULL COMMENT '合同文本内容',
+    `file_hash` VARCHAR(64) DEFAULT NULL COMMENT '文件SHA-256指纹(重复上传复用审查结果)',
     `status` VARCHAR(20) NOT NULL DEFAULT 'pending' COMMENT '状态: pending/processing/completed/failed',
     `risk_level` VARCHAR(20) DEFAULT NULL COMMENT '风险等级: 高风险/中风险/低风险',
     `risk_count` INT DEFAULT 0 COMMENT '风险条款数量',
@@ -45,6 +46,7 @@ CREATE TABLE IF NOT EXISTS `contract` (
     `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除',
     KEY `idx_user_id` (`user_id`),
     KEY `idx_status` (`status`),
+    KEY `idx_file_hash` (`file_hash`),
     KEY `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='合同表';
 

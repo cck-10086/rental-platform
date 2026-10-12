@@ -69,6 +69,17 @@ public class ContractServiceImpl implements ContractService {
         Long userId = SecurityUtil.getCurrentUserId();
 
         try {
+            byte[] fileBytes = file.getBytes();
+
+            // 计算文件指纹，命中审查缓存时直接复用已有报告，不重复调用 AI
+            String fileHash = sha256Hex(fileBytes);
+            Contract cached = findReviewedByHash(userId, fileHash);
+            if (cached != null) {
+                cached.setFromCache(true);
+                log.info("命中审查缓存，复用已有报告: cacheContractId={}", cached.getId());
+                return cached;
+            }
+
             // 生成唯一文件名
             String originalFilename = file.getOriginalFilename();
             String objectName = "contracts/" + userId + "/" + UUID.randomUUID().toString()
@@ -85,7 +96,7 @@ public class ContractServiceImpl implements ContractService {
             );
 
             // 从上传文件中提取合同文本内容（支持 TXT/PDF/docx/doc，扫描版 PDF 需 OCR 后支持）
-            String content = deepSeekService.extractTextFromFile(file.getBytes(), originalFilename);
+            String content = deepSeekService.extractTextFromFile(fileBytes, originalFilename);
 
             // 构建文件访问路径
             String filePath = minioConfig.getEndpoint() + "/" + minioConfig.getBucket() + "/" + objectName;
@@ -98,6 +109,7 @@ public class ContractServiceImpl implements ContractService {
             contract.setFilePath(filePath);
             contract.setFileType(getFileType(originalFilename));
             contract.setContent(content);
+            contract.setFileHash(fileHash);
             contract.setStatus("pending");
             contractMapper.insert(contract);
 
@@ -106,6 +118,39 @@ public class ContractServiceImpl implements ContractService {
         } catch (Exception e) {
             log.error("合同上传失败", e);
             throw new RuntimeException("合同上传失败，请稍后重试");
+        }
+    }
+
+    /**
+     * 按文件指纹查找同用户已完成审查的合同（审查缓存），未命中返回 null。
+     */
+    private Contract findReviewedByHash(Long userId, String fileHash) {
+        if (fileHash == null) {
+            return null;
+        }
+        return contractMapper.selectOne(new LambdaQueryWrapper<Contract>()
+                .eq(Contract::getUserId, userId)
+                .eq(Contract::getFileHash, fileHash)
+                .eq(Contract::getStatus, "completed")
+                .orderByDesc(Contract::getId)
+                .last("LIMIT 1"));
+    }
+
+    /**
+     * 计算字节流的 SHA-256 指纹（十六进制小写）。
+     */
+    private String sha256Hex(byte[] bytes) {
+        try {
+            byte[] digest = java.security.MessageDigest.getInstance("SHA-256").digest(bytes);
+            StringBuilder sb = new StringBuilder(digest.length * 2);
+            for (byte b : digest) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            // JDK 标准算法必然存在，此处仅作兜底
+            log.warn("SHA-256 算法不可用，跳过指纹计算", e);
+            return null;
         }
     }
 
@@ -128,8 +173,19 @@ public class ContractServiceImpl implements ContractService {
             throw new RuntimeException("该合同暂无可审查的文本内容：请上传包含可解析文本的 TXT/PDF/Word 合同");
         }
 
-        // 调用AI审查
-        Map<String, Object> reviewResult = deepSeekService.reviewContract(contractContent);
+        // 调用AI审查：失败时降级为 failed 状态返回，不向上抛 500，便于前端给出明确提示与重试入口
+        Map<String, Object> reviewResult;
+        try {
+            reviewResult = deepSeekService.reviewContract(contractContent);
+        } catch (Exception e) {
+            log.error("合同审查失败: contractId={}", contractId, e);
+            contract.setStatus("failed");
+            contractMapper.updateById(contract);
+            Map<String, Object> failed = new HashMap<>();
+            failed.put("status", "failed");
+            failed.put("message", e.getMessage() != null ? e.getMessage() : "合同审查服务暂时不可用，请稍后重试");
+            return failed;
+        }
         List<Map<String, Object>> records = (List<Map<String, Object>>) reviewResult.get("records");
 
         // 规则引擎二次校验：按锚点口径修正定量条款定级，并标记修正来源

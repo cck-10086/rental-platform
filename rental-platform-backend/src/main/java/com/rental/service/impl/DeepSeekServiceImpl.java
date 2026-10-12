@@ -269,7 +269,7 @@ public class DeepSeekServiceImpl implements DeepSeekService {
             return result;
         } catch (IOException e) {
             log.error("合同审查API调用异常", e);
-            throw new RuntimeException("合同审查服务调用失败，请稍后重试");
+            throw new RuntimeException("合同审查服务网络异常，请检查网络连接后重试");
         }
     }
 
@@ -308,7 +308,14 @@ public class DeepSeekServiceImpl implements DeepSeekService {
             if (!response.isSuccessful()) {
                 String errorBody = response.body() != null ? response.body().string() : "";
                 log.error("合同审查API请求失败: status={}, body={}", response.code(), errorBody);
-                throw new RuntimeException("合同审查请求失败: " + response.code());
+                // 按状态码给出可操作的失败原因，便于前端提示与演示排查
+                if (response.code() == 401) {
+                    throw new RuntimeException("AI 服务认证失败：请检查 API Key 配置");
+                }
+                if (response.code() == 402 || response.code() == 429) {
+                    throw new RuntimeException("AI 服务额度不足或请求受限，请检查账户余额或稍后重试");
+                }
+                throw new RuntimeException("合同审查请求失败（HTTP " + response.code() + "），请稍后重试");
             }
 
             String responseBody = response.body().string();

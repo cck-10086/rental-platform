@@ -18,6 +18,10 @@ public class Contract {    public Long getId() { return this.id; }
     public void setFileType(String fileType) { this.fileType = fileType; }
     public String getContent() { return this.content; }
     public void setContent(String content) { this.content = content; }
+    public Boolean getFromCache() { return this.fromCache; }
+    public void setFromCache(Boolean fromCache) { this.fromCache = fromCache; }
+    public String getFileHash() { return this.fileHash; }
+    public void setFileHash(String fileHash) { this.fileHash = fileHash; }
     public String getStatus() { return this.status; }
     public void setStatus(String status) { this.status = status; }
     public String getRiskLevel() { return this.riskLevel; }
@@ -34,6 +38,10 @@ public class Contract {    public Long getId() { return this.id; }
     @TableId
     private Long id;
 
+    /** 是否命中审查缓存（非持久化字段，仅响应时标记重复上传复用） */
+    @TableField(exist = false)
+    private Boolean fromCache;
+
     private Long userId;
 
     private String title;
@@ -45,6 +53,9 @@ public class Contract {    public Long getId() { return this.id; }
     private String fileType;
 
     private String content;
+
+    /** 文件 SHA-256 指纹，用于重复上传时复用已有审查结果 */
+    private String fileHash;
 
     private String status = "pending";
 
