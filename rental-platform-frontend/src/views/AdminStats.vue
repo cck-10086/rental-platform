@@ -39,7 +39,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { User, FileText, FileSearch, ShieldCheck, House, Wrench, Receipt } from '@lucide/vue'
+import { User, FileText, FileSearch, ShieldCheck, House, Wrench, Receipt, ThumbsUp, ThumbsDown } from '@lucide/vue'
 import { getAdminStats, getRiskConfig, updateRiskConfig } from '@/api/admin'
 
 const stats = ref({})
@@ -56,7 +56,9 @@ const cards = computed(() => [
   { label: '高风险合同', value: Number(stats.value.highRiskContractCount) || 0, icon: ShieldCheck, risk: true },
   { label: '房源总数', value: Number(stats.value.houseCount) || 0, icon: House },
   { label: '待处理报修', value: Number(stats.value.pendingRepairCount) || 0, icon: Wrench },
-  { label: '本月费用(元)', value: Number(stats.value.monthExpense) || 0, icon: Receipt, precision: 2 }
+  { label: '本月费用(元)', value: Number(stats.value.monthExpense) || 0, icon: Receipt, precision: 2 },
+  { label: '有用反馈(条)', value: Number(stats.value.feedbackUsefulCount) || 0, icon: ThumbsUp },
+  { label: '误报反馈(条)', value: Number(stats.value.feedbackFalseCount) || 0, icon: ThumbsDown }
 ])
 
 const fetchStats = async () => {

@@ -8,3 +8,7 @@ export const getContractList = (params) => request.get('/contract/list', { param
 export const getContractDetail = (id) => request.get(`/contract/detail/${id}`)
 export const getReviewRecords = (id) => request.get(`/contract/records/${id}`)
 export const deleteContract = (id) => request.delete(`/contract/${id}`)
+
+// 审查结果反馈（有用/误报）
+export const submitFeedback = (recordId, feedback) => request.post(`/contract/feedback/${recordId}`, { feedback })
+export const getFeedbacks = (contractId) => request.get('/contract/feedback', { params: { contractId } })

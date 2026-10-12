@@ -179,6 +179,29 @@
                 </template>
               </el-alert>
             </div>
+
+            <!-- 反馈：该条审查是否准确 -->
+            <div class="clause-feedback">
+              <span class="clause-feedback__label">该条审查结果是否准确？</span>
+              <div class="clause-feedback__buttons">
+                <el-button
+                  size="small"
+                  :type="feedbackMap[record.id] === 'useful' ? 'primary' : ''"
+                  :plain="feedbackMap[record.id] !== 'useful'"
+                  @click="handleFeedback(record.id, 'useful')"
+                >
+                  <el-icon><ThumbsUp /></el-icon> 有用
+                </el-button>
+                <el-button
+                  size="small"
+                  :type="feedbackMap[record.id] === 'false_positive' ? 'danger' : ''"
+                  :plain="feedbackMap[record.id] !== 'false_positive'"
+                  @click="handleFeedback(record.id, 'false_positive')"
+                >
+                  <el-icon><ThumbsDown /></el-icon> 误报
+                </el-button>
+              </div>
+            </div>
           </div>
         </div>
       </el-card>
@@ -204,9 +227,9 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
-  MessageSquare, TriangleAlert, Info, Printer, ArrowLeft, Download, FileSearch
+  MessageSquare, TriangleAlert, Info, Printer, ArrowLeft, Download, FileSearch, ThumbsUp, ThumbsDown
 } from '@lucide/vue'
-import { getContractDetail, getReviewRecords, reviewContract } from '@/api/contract'
+import { getContractDetail, getReviewRecords, reviewContract, getFeedbacks, submitFeedback } from '@/api/contract'
 import request from '@/api/request'
 
 const route = useRoute()
@@ -242,6 +265,20 @@ const handleReview = async () => {
     // 错误已在拦截器中处理
   } finally {
     reviewing.value = false
+  }
+}
+
+// 每条审查记录的反馈状态：recordId -> useful/false_positive
+const feedbackMap = reactive({})
+
+// 提交 有用/误报 反馈，同一记录重复提交视为更新
+const handleFeedback = async (recordId, feedback) => {
+  try {
+    await submitFeedback(recordId, feedback)
+    feedbackMap[recordId] = feedback
+    ElMessage.success(feedback === 'useful' ? '感谢确认，已记录' : '已标记为误报，我们会持续优化审查效果')
+  } catch {
+    // 错误已在拦截器中处理
   }
 }
 
@@ -316,10 +353,11 @@ const fetchData = async () => {
 
   loading.value = true
   try {
-    // 并行获取合同详情和审查记录
-    const [detailRes, recordsRes] = await Promise.all([
+    // 并行获取合同详情、审查记录和已提交的反馈
+    const [detailRes, recordsRes, feedbackRes] = await Promise.all([
       getContractDetail(contractId.value),
-      getReviewRecords(contractId.value)
+      getReviewRecords(contractId.value),
+      getFeedbacks(contractId.value)
     ])
 
     const detail = detailRes.data
@@ -330,6 +368,12 @@ const fetchData = async () => {
     contract.status = detail.status || ''
 
     records.value = recordsRes.data || []
+
+    // 回显已提交的反馈状态
+    Object.keys(feedbackMap).forEach(key => delete feedbackMap[key])
+    for (const item of feedbackRes.data || []) {
+      feedbackMap[item.recordId] = item.feedback
+    }
   } catch {
     // 错误已在拦截器中处理
   } finally {
@@ -538,6 +582,27 @@ onMounted(() => {
   color: var(--rp-text-secondary);
 }
 
+/* 条款反馈：有用/误报 */
+.clause-feedback {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rp-divider);
+}
+
+.clause-feedback__label {
+  font-size: 12px;
+  color: var(--rp-text-muted);
+}
+
+.clause-feedback__buttons {
+  display: flex;
+  gap: 8px;
+}
+
 /* 底部操作 */
 /* 审查入口卡片 */
 .review-entry {
@@ -588,6 +653,7 @@ onMounted(() => {
   .clause-item { padding: 16px; }
   .clause-header { align-items: flex-start; flex-direction: column; gap: 8px; }
   .clause-original-text { padding: 11px 12px; font-size: 13px; }
+  .clause-feedback { flex-direction: column; align-items: flex-start; }
   .review-actions { align-items: stretch; flex-direction: column; padding-bottom: 12px; }
   .review-actions :deep(.el-button) { width: 100%; margin-left: 0; }
 }

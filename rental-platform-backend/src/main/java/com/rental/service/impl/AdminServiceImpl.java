@@ -9,12 +9,14 @@ import com.rental.entity.Expense;
 import com.rental.entity.House;
 import com.rental.entity.MoveOutChecklist;
 import com.rental.entity.RepairRequest;
+import com.rental.entity.ReviewFeedback;
 import com.rental.entity.User;
 import com.rental.mapper.ContractMapper;
 import com.rental.mapper.ExpenseMapper;
 import com.rental.mapper.HouseMapper;
 import com.rental.mapper.MoveOutChecklistMapper;
 import com.rental.mapper.RepairRequestMapper;
+import com.rental.mapper.ReviewFeedbackMapper;
 import com.rental.mapper.UserMapper;
 import com.rental.service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +54,9 @@ public class AdminServiceImpl implements AdminService {
 
     @Autowired
     private RepairRequestMapper repairRequestMapper;
+
+    @Autowired
+    private ReviewFeedbackMapper reviewFeedbackMapper;
 
     @Autowired
     private MoveOutChecklistMapper moveOutChecklistMapper;
@@ -229,6 +234,12 @@ public class AdminServiceImpl implements AdminService {
         stats.put("houseCount", houseMapper.selectCount(null));
         stats.put("pendingRepairCount", repairRequestMapper.selectCount(
                 new LambdaQueryWrapper<RepairRequest>().eq(RepairRequest::getStatus, "pending")));
+
+        // 误报反馈闭环统计：用户确认有用与标记误报的条款数量
+        stats.put("feedbackUsefulCount", reviewFeedbackMapper.selectCount(
+                new LambdaQueryWrapper<ReviewFeedback>().eq(ReviewFeedback::getFeedback, "useful")));
+        stats.put("feedbackFalseCount", reviewFeedbackMapper.selectCount(
+                new LambdaQueryWrapper<ReviewFeedback>().eq(ReviewFeedback::getFeedback, "false_positive")));
 
         LocalDateTime monthStart = LocalDate.now().withDayOfMonth(1).atStartOfDay();
         LocalDateTime monthEnd = monthStart.plusMonths(1);

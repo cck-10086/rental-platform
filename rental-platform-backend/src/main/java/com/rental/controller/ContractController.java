@@ -2,8 +2,10 @@ package com.rental.controller;
 
 import com.rental.common.Result;
 import com.rental.entity.Contract;
+import com.rental.entity.ReviewFeedback;
 import com.rental.entity.ReviewRecord;
 import com.rental.service.ContractService;
+import com.rental.service.ReviewFeedbackService;
 import com.rental.common.PageResult;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -19,11 +21,14 @@ import java.util.Map;
 @RequestMapping("/api/contract")
 public class ContractController {
 
-    public ContractController(ContractService contractService) {
+    public ContractController(ContractService contractService, ReviewFeedbackService reviewFeedbackService) {
         this.contractService = contractService;
+        this.reviewFeedbackService = reviewFeedbackService;
     }
 
     private final ContractService contractService;
+
+    private final ReviewFeedbackService reviewFeedbackService;
 
     @PostMapping("/upload")
     public Result<Contract> upload(@RequestParam("file") MultipartFile file,
@@ -52,6 +57,19 @@ public class ContractController {
     @GetMapping("/records/{contractId}")
     public Result<List<ReviewRecord>> records(@PathVariable Long contractId) {
         return Result.success(contractService.getReviewRecords(contractId));
+    }
+
+    /** 提交或更新当前用户对某条审查记录的 有用/误报 反馈 */
+    @PostMapping("/feedback/{recordId}")
+    public Result<?> submitFeedback(@PathVariable Long recordId, @RequestBody Map<String, String> body) {
+        reviewFeedbackService.submit(recordId, body.get("feedback"));
+        return Result.success();
+    }
+
+    /** 查询当前用户对某合同全部条款的反馈（报告页回显按钮状态） */
+    @GetMapping("/feedback")
+    public Result<List<ReviewFeedback>> listFeedback(@RequestParam Long contractId) {
+        return Result.success(reviewFeedbackService.listMyFeedback(contractId));
     }
 
     @GetMapping("/report/{contractId}")

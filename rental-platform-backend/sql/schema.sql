@@ -80,6 +80,19 @@ CREATE TABLE IF NOT EXISTS `risk_config` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='风险偏好配置表';
 
 -- ========================
+-- 审查结果反馈表
+-- ========================
+CREATE TABLE IF NOT EXISTS `review_feedback` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '反馈ID',
+    `record_id` BIGINT NOT NULL COMMENT '审查记录ID',
+    `user_id` BIGINT NOT NULL COMMENT '用户ID',
+    `feedback` VARCHAR(16) NOT NULL COMMENT '反馈类型: useful-有用/false_positive-误报',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '反馈时间',
+    UNIQUE KEY `uk_record_user` (`record_id`, `user_id`),
+    KEY `idx_record_id` (`record_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='审查结果反馈表';
+
+-- ========================
 -- 房源表
 -- ========================
 CREATE TABLE IF NOT EXISTS `house` (
