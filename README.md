@@ -10,16 +10,16 @@ rental-platform-frontend/   Vue 3 前端（Vite + Element Plus + Pinia）
 deploy/                     部署示例配置（Nginx、生产配置）
 docs/code_review.md         代码审查清单
 docs/部署文档.md             局域网/内网穿透/云服务器部署指南
-docs/接口测试清单.md         后端接口测试清单（24 个用例）
+docs/接口测试清单.md         后端接口与自动化测试清单
 docs/项目说明.md             项目功能与技术实现说明
-_archive/                   归档区：scripts/（历史脚本）、ppt_build/（演示文稿构建脚本）、working/（文档制作脚本）及材料提取文件，保留备查
 ```
 
 ## 技术栈
 
 - 后端：Java 21、Spring Boot 3.4、MyBatis-Plus、MySQL、MinIO、JWT、Knife4j
 - 前端：Vue 3、Vite、Element Plus、Pinia、Axios
-- AI：DeepSeek API（模型 `deepseek-v4-flash`）
+- AI：DeepSeek API（模型 `deepseek-flash`）、LangChain4j + bge-small-zh-v1.5 本地向量检索（RAG）
+- 文档解析：PDFBox、POI、RapidOCR（扫描版 PDF）
 - 可视化与导出：ECharts 图表、PDFBox 审查报告导出 PDF
 - 工程化：AOP 接口耗时日志、后端分页、合同文件预览/下载、AI 历史会话管理
 
@@ -40,10 +40,14 @@ _archive/                   归档区：scripts/（历史脚本）、ppt_build/�
 
 | 环境变量 | 说明 |
 | --- | --- |
-| `DB_USERNAME` | 数据库用户名（默认 `root`） |
+| `DB_USERNAME` | 数据库用户名（必填） |
 | `DB_PASSWORD` | 数据库密码（必填） |
 | `DEEPSEEK_API_KEY` | DeepSeek API Key（必填，AI 功能依赖） |
-| `JWT_SECRET` | JWT 签名密钥，生产环境必须更换 |
+| `MINIO_ACCESS_KEY` | MinIO 访问账号（必填） |
+| `MINIO_SECRET_KEY` | MinIO 访问密钥（必填） |
+| `JWT_SECRET` | JWT 签名密钥，至少32个随机字符（必填） |
+
+可复制 `rental-platform-backend/.env.example` 查看变量清单；示例文件仅含占位值。
 
 ### 启动后端
 
@@ -74,7 +78,7 @@ Vite 开发服务器已将 `/api` 代理到 `http://localhost:8088`。
 项目根目录提供了两个启动脚本，无需手动配置 PATH：
 
 ```powershell
-.\start-backend.ps1     # 启动后端（首次使用前请先设置系统环境变量 DB_USERNAME/DB_PASSWORD/DEEPSEEK_API_KEY）
+.\start-backend.ps1     # 启动后端（首次使用前请先设置后端配置表中的环境变量）
 .\start-frontend.ps1    # 启动前端
 ```
 
@@ -98,15 +102,16 @@ start-frontend.bat
 ## 检查命令
 
 ```bash
-npm run build    # 前端构建
+npm run lint     # 前端代码检查
 npm test         # 前端单元测试（Vitest，8 个用例）
-mvn test         # 后端单元测试（24 个用例，覆盖 JWT/安全/用户/管理/AI 会话与文件解析）
+npm run build    # 前端构建
+mvn test         # 后端测试（45 个用例）
 ```
 
-> 注：项目已配置 Vitest 前端测试与 JUnit/Mockito 后端测试；未配置 ESLint，`npm run lint` 不可用。
+> 注：项目已配置 ESLint、Vitest 与 JUnit/Mockito。
 
 ## 已知限制
 
-- 合同文本解析支持 TXT/PDF/docx/doc；扫描版 PDF（图片）需 OCR 支持，属后续规划；
+- 合同文本解析支持 TXT/PDF/docx/doc；扫描版 PDF 由 PDFBox 渲染为图像后经 RapidOCR 识别，识别效果受扫描质量影响；
 - AI 对话与合同审查依赖 DeepSeek API，需要网络与有效 API Key；
-- OCR 识别与 Redis 缓存属后续规划；JWT 密钥为开发默认值，生产环境须通过环境变量更换。
+- Redis 缓存属后续规划；JWT 与 MinIO 凭据必须通过环境变量提供。
