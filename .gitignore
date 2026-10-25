@@ -9,6 +9,7 @@ target/
 # 环境变量与本地敏感配置
 .env
 .env.*
+!.env.example
 application-local.yml
 token.txt
 

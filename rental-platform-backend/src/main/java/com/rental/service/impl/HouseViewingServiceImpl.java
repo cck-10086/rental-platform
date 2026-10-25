@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,10 +29,39 @@ public class HouseViewingServiceImpl implements HouseViewingService {
     @Override
     public HouseViewing add(HouseViewing viewing) {
         Long userId = SecurityUtil.getCurrentUserId();
+        if (houseMapper.selectById(viewing.getHouseId()) == null) {
+            throw new RuntimeException("房源不存在");
+        }
+        viewing.setId(null);
         viewing.setUserId(userId);
+        viewing.setCreatedAt(null);
         houseViewingMapper.insert(viewing);
         log.info("看房记录添加成功: id={}, houseId={}", viewing.getId(), viewing.getHouseId());
         return viewing;
+    }
+
+    @Override
+    public void update(HouseViewing viewing) {
+        Long currentUserId = SecurityUtil.getCurrentUserId();
+        HouseViewing existing = houseViewingMapper.selectById(viewing.getId());
+        if (existing == null) {
+            throw new RuntimeException("看房记录不存在");
+        }
+        if (!Objects.equals(existing.getUserId(), currentUserId)) {
+            throw new RuntimeException("无权修改该看房记录");
+        }
+        if (houseMapper.selectById(viewing.getHouseId()) == null) {
+            throw new RuntimeException("房源不存在");
+        }
+        // 仅复制允许编辑的字段，避免客户端覆盖用户和创建时间等系统字段
+        existing.setHouseId(viewing.getHouseId());
+        existing.setViewingTime(viewing.getViewingTime());
+        existing.setImpression(viewing.getImpression());
+        existing.setPros(viewing.getPros());
+        existing.setCons(viewing.getCons());
+        existing.setScore(viewing.getScore());
+        houseViewingMapper.updateById(existing);
+        log.info("看房记录更新成功: id={}", existing.getId());
     }
 
     @Override
@@ -64,7 +94,7 @@ public class HouseViewingServiceImpl implements HouseViewingService {
         if (existing == null) {
             throw new RuntimeException("看房记录不存在");
         }
-        if (!existing.getUserId().equals(currentUserId)) {
+        if (!Objects.equals(existing.getUserId(), currentUserId)) {
             throw new RuntimeException("无权删除该看房记录");
         }
         houseViewingMapper.deleteById(id);

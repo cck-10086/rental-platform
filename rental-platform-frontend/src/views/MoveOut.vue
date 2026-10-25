@@ -18,9 +18,12 @@
       <template v-else>
       <!-- 退租列表 -->
       <el-table class="rp-desktop-table" :data="moveOutList" stripe v-loading="loading" style="width: 100%">
-        <el-table-column label="合同信息" min-width="160">
+        <el-table-column label="合同信息" min-width="220">
           <template #default="{ row }">
-            {{ row.contractId || '-' }}
+            <div class="contract-cell">
+              <span class="contract-cell__title">{{ contractTitle(row.contractId) }}</span>
+              <span class="contract-cell__id">合同ID {{ row.contractId || '-' }}</span>
+            </div>
           </template>
         </el-table-column>
         <el-table-column prop="moveOutDate" label="退租日期" width="120" />
@@ -62,7 +65,7 @@
       <div class="rp-mobile-list">
         <article v-for="item in moveOutList" :key="item.id" class="rp-mobile-card">
           <div class="rp-mobile-card__header">
-            <h3 class="rp-mobile-card__title">合同 {{ item.contractId || '-' }}</h3>
+            <h3 class="rp-mobile-card__title">{{ contractTitle(item.contractId) }}</h3>
             <el-tag :type="statusType(item.status)" size="small">{{ statusLabel(item.status) }}</el-tag>
           </div>
           <div class="rp-mobile-card__meta">
@@ -160,6 +163,8 @@ const loading = ref(false)
 const submitting = ref(false)
 const moveOutList = ref([])
 const contractOptions = ref([])
+// 合同ID到标题的映射，用于列表"合同信息"列展示合同标题
+const contractTitleMap = ref({})
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
@@ -189,6 +194,9 @@ const calcRefund = (row) => {
   return (total - deduction).toFixed(2)
 }
 
+// 根据合同ID取标题，未匹配到时回退为"合同+ID"
+const contractTitle = (id) => contractTitleMap.value[id] || `合同${id}`
+
 const statusType = (status) => {
   const map = { pending: 'warning', completed: 'success', cancelled: 'info' }
   return map[status] || 'info'
@@ -212,7 +220,11 @@ const resetForm = () => {
 const fetchContracts = async () => {
   try {
     const res = await getContractList({ size: 1000 })
-    contractOptions.value = res.data || []
+    contractOptions.value = res.data.records || []
+    // 建立 id -> 标题 映射，供"合同信息"列展示
+    contractTitleMap.value = Object.fromEntries(
+      contractOptions.value.map(c => [c.id, c.title || `合同${c.id}`])
+    )
   } catch {
     // 错误已在拦截器中处理
   }
@@ -294,6 +306,7 @@ const fetchList = async () => {
 
 onMounted(() => {
   fetchList()
+  fetchContracts()
 })
 </script>
 
@@ -301,6 +314,18 @@ onMounted(() => {
 .list-container {
   max-width: 1200px;
   margin: 0 auto;
+}
+
+.contract-cell__title {
+  display: block;
+  line-height: 1.4;
+}
+
+.contract-cell__id {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--rp-text-muted);
 }
 
 .pagination-wrapper {

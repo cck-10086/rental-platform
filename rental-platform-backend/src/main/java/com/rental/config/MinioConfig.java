@@ -1,5 +1,6 @@
 package com.rental.config;
 import io.minio.MinioClient;
+import jakarta.annotation.PostConstruct;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +19,18 @@ public class MinioConfig {    public String getEndpoint() { return this.endpoint
     private String accessKey;
     private String secretKey;
     private String bucket;
+
+    @PostConstruct
+    public void validateCredentials() {
+        if (isMissing(accessKey) || isMissing(secretKey)) {
+            throw new IllegalStateException(
+                    "必须通过 MINIO_ACCESS_KEY 和 MINIO_SECRET_KEY 环境变量配置 MinIO 凭据");
+        }
+    }
+
+    private boolean isMissing(String value) {
+        return value == null || value.isBlank() || value.startsWith("${");
+    }
 
     @Bean
     public MinioClient minioClient() {

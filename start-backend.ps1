@@ -1,13 +1,26 @@
 ﻿# 后端一键启动脚本（不依赖系统 PATH，双击或右键"使用 PowerShell 运行"）
-# 使用前请先在系统环境变量中配置 DB_USERNAME、DB_PASSWORD 与 DEEPSEEK_API_KEY（setx 后重启终端）
+# 使用前请先配置数据库、MinIO、JWT 与 DeepSeek 环境变量（setx 后重启终端）
 $ErrorActionPreference = 'Stop'
 
 $env:JAVA_HOME = 'E:\software\java\java-jdk.25'
 $env:MAVEN_HOME = 'E:\software\maven\apache-maven-3.9.15'
-$env:DB_USERNAME = 'root'
- 
+if (-not $env:DB_USERNAME) {
+    Write-Warning '未检测到环境变量 DB_USERNAME，请先配置数据库用户名。'
+    exit 1
+}
+
 if (-not $env:DB_PASSWORD) {
     Write-Warning '未检测到环境变量 DB_PASSWORD，后端将无法连接数据库。请先执行：setx DB_PASSWORD "你的数据库密码" 并重启终端'
+    exit 1
+}
+
+if (-not $env:MINIO_ACCESS_KEY -or -not $env:MINIO_SECRET_KEY) {
+    Write-Warning '未检测到 MinIO 凭据，请先配置 MINIO_ACCESS_KEY 和 MINIO_SECRET_KEY。'
+    exit 1
+}
+
+if (-not $env:JWT_SECRET) {
+    Write-Warning '未检测到环境变量 JWT_SECRET，请配置至少32个字符的随机密钥。'
     exit 1
 }
 

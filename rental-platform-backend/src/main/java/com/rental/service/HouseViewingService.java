@@ -5,6 +5,7 @@ import java.util.List;
 
 public interface HouseViewingService {
     HouseViewing add(HouseViewing viewing);
+    void update(HouseViewing viewing);
     List<HouseViewing> listByHouse(Long houseId);
     List<HouseViewing> listByUser();
     void delete(Long id);

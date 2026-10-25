@@ -1,0 +1,8 @@
+feat(看房): 新增看房记录模块；加固密钥配置
+
+- 新增 HouseViewingCreateDTO / HouseViewingUpdateDTO 参数校验，编辑时仅复制可编辑字段
+- 新增前端 houseViewing API 与 HouseViewingList 页面，侧边栏与路由接入「看房记录」
+- MinIO / JWT 凭据改为必须由环境变量注入，启动时校验，移除仓库内默认值
+- GlobalExceptionHandler 不再向客户端暴露框架与第三方异常细节
+- 启动脚本缺少环境变量时直接报错退出；补充 .env.example
+- 同步 docs 与 README：测试数量更正为后端 45、前端 8，模型名 deepseek-flash

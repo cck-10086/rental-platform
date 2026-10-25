@@ -15,6 +15,7 @@ const routes = [
       { path: 'contract/review/:id', name: 'ContractReview', component: () => import('@/views/ContractReview.vue'), meta: { title: '审查报告' } },
       { path: 'contract/list', name: 'ContractList', component: () => import('@/views/ContractList.vue'), meta: { title: '合同管理' } },
       { path: 'house/list', name: 'HouseList', component: () => import('@/views/HouseList.vue'), meta: { title: '房源管理' } },
+      { path: 'house/viewings', name: 'HouseViewingList', component: () => import('@/views/HouseViewingList.vue'), meta: { title: '看房记录' } },
       { path: 'expense/list', name: 'ExpenseList', component: () => import('@/views/ExpenseList.vue'), meta: { title: '费用管理' } },
       { path: 'repair/list', name: 'RepairList', component: () => import('@/views/RepairList.vue'), meta: { title: '维修报备' } },
       { path: 'move-out', name: 'MoveOut', component: () => import('@/views/MoveOut.vue'), meta: { title: '退租管理' } },

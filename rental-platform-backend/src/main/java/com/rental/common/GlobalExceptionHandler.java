@@ -31,7 +31,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public Result<?> handleRuntimeException(RuntimeException e) {
         log.error("运行时异常", e);
-        return Result.error(e.getMessage());
+        // 业务层主动抛出的 RuntimeException 保留明确提示；框架和第三方异常不向客户端暴露内部细节
+        if (e.getClass() == RuntimeException.class && e.getMessage() != null && !e.getMessage().isBlank()) {
+            return Result.error(e.getMessage());
+        }
+        return Result.error("系统繁忙，请稍后再试");
     }
     @ExceptionHandler(Exception.class)
     public Result<?> handleException(Exception e) {

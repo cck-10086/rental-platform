@@ -33,18 +33,20 @@ mybatis-plus:
 
 minio:
   endpoint: http://localhost:9000
-  access-key: minioadmin
-  secret-key: minioadmin
+  # MinIO 凭据必须由运行环境提供，禁止在仓库中保留可用默认值
+  access-key: ${MINIO_ACCESS_KEY}
+  secret-key: ${MINIO_SECRET_KEY}
   bucket: rental-contracts
 
 deepseek:
   # API Key 通过环境变量注入，请勿写死在配置文件中
   api-key: ${DEEPSEEK_API_KEY:}
   base-url: https://api.deepseek.com
-  model: deepseek-v4-flash
+  model: deepseek-flash
 
 jwt:
-  secret: rental-platform-jwt-secret-key-2026-please-change-in-production
+  # JWT 密钥必须由运行环境提供，并使用足够长度的随机字符串
+  secret: ${JWT_SECRET}
   expiration: 86400000
 
 # Knife4j API文档配置

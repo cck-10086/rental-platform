@@ -23,6 +23,7 @@
         <el-menu-item index="/contract/list">我的合同</el-menu-item>
       </el-sub-menu>
       <el-menu-item index="/house/list"><el-icon><House /></el-icon><template #title>房源管理</template></el-menu-item>
+      <el-menu-item index="/house/viewings"><el-icon><CalendarDays /></el-icon><template #title>看房记录</template></el-menu-item>
       <el-menu-item index="/expense/list"><el-icon><Receipt /></el-icon><template #title>费用管理</template></el-menu-item>
       <el-menu-item index="/repair/list"><el-icon><Wrench /></el-icon><template #title>维修报备</template></el-menu-item>
       <el-menu-item index="/move-out"><el-icon><DoorOpen /></el-icon><template #title>退租管理</template></el-menu-item>
@@ -40,7 +41,7 @@
 <script setup>
 import {
   House, ClipboardList, FileText, Receipt, Wrench,
-  DoorOpen, Bot, Settings2
+  DoorOpen, Bot, Settings2, CalendarDays
 } from '@lucide/vue'
 
 defineProps({

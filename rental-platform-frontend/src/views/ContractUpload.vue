@@ -4,7 +4,7 @@
       <template #header>
         <div class="card-heading">
           <span class="card-title">上传合同文件</span>
-          <small>系统将在上传后自动进入 AI 审查流程</small>
+          <small>上传成功后可在审查页面发起 AI 合同审查</small>
         </div>
       </template>
 

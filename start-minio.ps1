@@ -10,5 +10,17 @@ if (-not (Test-Path $minio)) {
 }
 
 New-Item -ItemType Directory -Force -Path $dataDir | Out-Null
-Write-Host '正在启动 MinIO（API: http://localhost:9000，控制台: http://localhost:9001，默认账号 minioadmin/minioadmin）...' -ForegroundColor Cyan
+
+if (-not $env:MINIO_ROOT_USER) {
+    $env:MINIO_ROOT_USER = $env:MINIO_ACCESS_KEY
+}
+if (-not $env:MINIO_ROOT_PASSWORD) {
+    $env:MINIO_ROOT_PASSWORD = $env:MINIO_SECRET_KEY
+}
+if (-not $env:MINIO_ROOT_USER -or -not $env:MINIO_ROOT_PASSWORD) {
+    Write-Error '未检测到 MinIO 凭据。请先设置 MINIO_ACCESS_KEY 和 MINIO_SECRET_KEY 环境变量。'
+    exit 1
+}
+
+Write-Host '正在启动 MinIO（API: http://localhost:9000，控制台: http://localhost:9001）...' -ForegroundColor Cyan
 & $minio server $dataDir --address :9000 --console-address :9001
