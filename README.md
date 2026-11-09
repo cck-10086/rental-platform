@@ -2,6 +2,18 @@
 
 面向租客的租房辅助平台，提供合同上传与 AI 审查、房源管理、费用管理、维修报备、退租管理、AI 法律咨询等功能，并内置管理员后台（用户管理、全局数据查看、平台统计）。
 
+## 界面预览
+
+| 登录页 | 工作台 |
+| --- | --- |
+| ![登录页](docs/screenshots/01-login.png) | ![工作台](docs/screenshots/02-workbench.png) |
+
+![合同审查报告](docs/screenshots/03-contract-review.png)
+
+| AI 租房顾问 | 后台数据统计 |
+| --- | --- |
+| ![AI 租房顾问](docs/screenshots/04-ai-advisor.png) | ![后台统计](docs/screenshots/05-admin-stats.png) |
+
 ## 项目结构
 
 ```text
