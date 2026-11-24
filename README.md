@@ -38,7 +38,7 @@ docs/项目说明.md             项目功能与技术实现说明
 ## 角色说明
 
 - **普通用户**：使用合同审查、房源、费用、维修、退租、AI 咨询等全部业务功能；
-- **管理员**（`admin`，角色字段 `role=admin`）：额外拥有管理后台——用户管理（启用/禁用、改角色、重置密码）、全局数据只读查看（合同/房源/费用/报修/退租）、平台数据统计。
+- **管理员**（`admin / admin123456`，角色字段 `role=admin`）：额外拥有管理后台——用户管理（启用/禁用、改角色、重置密码）、全局数据只读查看（合同/房源/费用/报修/退租）、平台数据统计。
 
 ## 环境要求
 
@@ -87,25 +87,42 @@ Vite 开发服务器已将 `/api` 代理到 `http://localhost:8088`。
 
 ## 一键启动
 
-项目根目录提供了两个启动脚本，无需手动配置 PATH：
+项目根目录提供三个启动脚本，无需手动配置 PATH。脚本用 `$PSScriptRoot` 定位项目目录，
+并在环境变量缺失时自动从「用户级 / 系统级」注册表补齐，不依赖当前终端会话。
 
 ```powershell
-.\start-backend.ps1     # 启动后端（首次使用前请先设置后端配置表中的环境变量）
-.\start-frontend.ps1    # 启动前端
+.\start-minio.ps1      # 1. MinIO（合同文件存储，API 9000，控制台 9001）
+.\start-backend.ps1    # 2. 后端（http://localhost:8088，接口文档 /doc.html）
+.\start-frontend.ps1   # 3. 前端（http://localhost:5173）
 ```
 
-合同上传依赖 MinIO（本机安装于 `E:\software\minio`），请先启动：
+启动前想确认环境是否齐全，加 `-Check` 只做自检、不启动服务：
 
 ```powershell
-.\start-minio.ps1       # 启动 MinIO（API 9000，控制台 9001）
+.\start-backend.ps1 -Check
 ```
 
-> 在 cmd 窗口里请使用对应的 `.bat` 脚本（或先输入 `powershell` 再运行 `.ps1`）：
+停止全部服务（按端口精确停止 8088 / 5173 / 4173 / 9000 / 9001，不会误杀其他程序）：
+
+```powershell
+.\stop-all.ps1          # 加 -Check 只列出谁在占端口，不杀进程
+```
+
+> 在 cmd 窗口或资源管理器里双击，请用对应的 `.bat`（`.bat` 会把参数透传给 `.ps1`）：
 
 ```cmd
+start-minio.bat
 start-backend.bat
 start-frontend.bat
+stop-all.bat -Check
 ```
+
+### 演示账号
+
+| 角色 | 账号 | 密码 |
+|---|---|---|
+| 普通用户 | `probe_235205` | `123456` |
+| 管理员 | `admin` | `admin123456` |
 
 ## 部署到其他环境
 
